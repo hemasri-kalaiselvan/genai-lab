@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Echo — a small chatbot</title>
+<style>
+  :root{
+    --ink:#1b1a17;
+    --paper:#f7f5f0;
+    --line:#d8d3c7;
+    --accent:#3d5a4a;
+    --accent-soft:#e7ede9;
+    --user-bubble:#232220;
+    --user-text:#f7f5f0;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Georgia', 'Iowan Old Style', serif;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  header{
+    width:100%;
+    max-width:720px;
+    padding:28px 20px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  header h1{
+    margin:0;
+    font-size:1.6rem;
+    font-weight:normal;
+    letter-spacing:0.01em;
+  }
+  header p{
+    margin:6px 0 0;
+    font-size:0.9rem;
+    color:#6b675e;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+  }
+  main{
+    width:100%;
+    max-width:720px;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    padding:20px;
+    overflow:hidden;
+  }
+  #log{
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    padding-bottom:12px;
+  }
+  .msg{
+    max-width:82%;
+    padding:10px 14px;
+    border-radius:3px;
+    line-height:1.5;
+    font-size:0.98rem;
+  }
+  .msg.user{
+    align-self:flex-end;
+    background:var(--user-bubble);
+    color:var(--user-text);
+    border-bottom-right-radius:0;
+    white-space:pre-wrap;
+  }
+  .msg.bot{
+    align-self:flex-start;
+    background:var(--accent-soft);
+    color:var(--ink);
+    border-bottom-left-radius:0;
+    position:relative;
+  }
+  .copy-btn{
+    display:block;
+    margin-top:8px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.72rem;
+    color:var(--accent);
+    background:none;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:3px 9px;
+    cursor:pointer;
+    width:auto;
+  }
+  .copy-btn:hover{background:rgba(0,0,0,0.04);}
+  .copy-btn.copied{color:#3f6b4f; border-color:#3f6b4f;}
+  .msg.bot p{margin:0 0 8px;}
+  .msg.bot p:last-child{margin-bottom:0;}
+  .msg.bot ul, .msg.bot ol{margin:0 0 8px; padding-left:20px;}
+  .msg.bot li{margin-bottom:2px;}
+  .msg.bot h1, .msg.bot h2, .msg.bot h3{margin:10px 0 6px; font-size:1.05rem; line-height:1.3;}
+  .msg.bot h1:first-child, .msg.bot h2:first-child, .msg.bot h3:first-child{margin-top:0;}
+  .msg.bot strong{font-weight:700;}
+  .msg.bot blockquote{
+    margin:0 0 8px;
+    padding-left:10px;
+    border-left:3px solid var(--line);
+    color:#5c5a52;
+  }
+  .msg.bot code{
+    font-family:'Courier New', monospace;
+    font-size:0.88em;
+    background:rgba(0,0,0,0.07);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  .msg.bot pre{
+    background:#232220;
+    color:#f1efe8;
+    padding:12px;
+    border-radius:4px;
+    overflow-x:auto;
+    margin:0 0 8px;
+    font-size:0.85rem;
+    max-width:100%;
+  }
+  .msg.bot pre code{
+    background:none;
+    padding:0;
+    color:inherit;
+  }
+  .msg.bot table{
+    border-collapse:collapse;
+    width:100%;
+    font-size:0.85rem;
+    margin:0 0 8px;
+    display:block;
+    overflow-x:auto;
+  }
+  .msg.bot th, .msg.bot td{
+    border:1px solid var(--line);
+    padding:4px 8px;
+    text-align:left;
+  }
+  .msg.bot a{color:var(--accent); word-break:break-word;}
+  .msg.system{
+    align-self:center;
+    color:#8a8578;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.82rem;
+    background:none;
+  }
+  form{
+    display:flex;
+    gap:8px;
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+  textarea{
+    flex:1;
+    resize:none;
+    font-family:inherit;
+    font-size:0.98rem;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:#fff;
+    color:var(--ink);
+    height:44px;
+  }
+  textarea:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  button{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.9rem;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:0 20px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  button:disabled{opacity:0.5; cursor:default;}
+  #setup{
+    max-width:720px;
+    width:100%;
+    padding:20px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.88rem;
+    color:#6b675e;
+  }
+  #setup input{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    margin-top:6px;
+  }
+  #setup a{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Echo</h1>
+  <p>A small chatbot, running on Groq's free API.</p>
+</header>
+
+<div id="setup">
+  <label for="apiKey">Your free Groq API key</label>
+  <input id="apiKey" type="password" placeholder="Paste your key here — get one at console.groq.com/keys">
+</div>
+
+<main>
+  <div id="log"></div>
+  <form id="chatForm">
+    <textarea id="input" placeholder="Say something…" required></textarea>
+    <button type="submit" id="sendBtn">Send</button>
+  </form>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+<script>
+const log = document.getElementById('log');
+const form = document.getElementById('chatForm');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const apiKeyInput = document.getElementById('apiKey');
+
+// Remember the key locally so the user doesn't retype it every visit.
+apiKeyInput.value = localStorage.getItem('echo_groq_key') || '';
+apiKeyInput.addEventListener('input', () => {
+  localStorage.setItem('echo_groq_key', apiKeyInput.value.trim());
+});
+
+let history = [{ role: 'system', content: 'You are Echo, a friendly, concise chatbot.' }];
+
+// Retry a flaky/overloaded response a couple of times with a short backoff
+// before giving up, so a temporary hiccup doesn't break the conversation.
+// Preference order: try these first if available, but never fail just
+// because none of them exist any more — always fall back to whatever
+// Groq's account actually has.
+const MODEL_PREFERENCE = [
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+  'qwen/qwen3.6-27b',
+  'moonshotai/kimi-k2-instruct'
+];
+const NON_CHAT_MODEL = /whisper|tts|guard|prompt-guard/i;
+
+let currentModel = sessionStorage.getItem('genai_lab_groq_model') || null;
+
+async function pickModel(apiKey) {
+  const res = await fetch('https://api.groq.com/openai/v1/models', {
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error?.message || 'Could not fetch the model list.');
+  }
+  const available = (data.data || []).map(m => m.id).filter(id => !NON_CHAT_MODEL.test(id));
+  const chosen = MODEL_PREFERENCE.find(m => available.includes(m)) || available[0];
+  if (!chosen) throw new Error('No chat models are available on this Groq account.');
+
+  currentModel = chosen;
+  sessionStorage.setItem('genai_lab_groq_model', chosen);
+  return chosen;
+}
+
+async function callGroq(apiKey, messages, attempt = 1) {
+  if (!currentModel) {
+    const chosen = await pickModel(apiKey);
+    addMessage('system', 'Using model: ' + chosen);
+  }
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: currentModel,
+      messages
+    })
+  });
+  const data = await res.json();
+
+  // The cached model was retired since we picked it — refresh and retry once.
+  const modelGone = data.error && /does not exist|decommission|not found/i.test(data.error.message || '');
+  if (modelGone && attempt < 3) {
+    currentModel = null;
+    sessionStorage.removeItem('genai_lab_groq_model');
+    const chosen = await pickModel(apiKey);
+    addMessage('system', 'Previous model was retired — switched to: ' + chosen);
+    return callGroq(apiKey, messages, attempt + 1);
+  }
+
+  const retryable = data.error && (res.status === 429 || res.status >= 500);
+  if (retryable && attempt < 3) {
+    await new Promise(r => setTimeout(r, attempt * 1000));
+    return callGroq(apiKey, messages, attempt + 1);
+  }
+  return data;
+}
+
+function addMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  if (role === 'bot') {
+    div.innerHTML = DOMPurify.sanitize(marked.parse(text));
+
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.type = 'button';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 1500);
+      } catch (err) {
+        btn.textContent = 'Could not copy';
+      }
+    });
+    div.appendChild(btn);
+  } else {
+    div.textContent = text;
+  }
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = input.value.trim();
+  const apiKey = apiKeyInput.value.trim();
+  if (!text) return;
+  if (!apiKey) {
+    addMessage('system', 'Add your free Groq API key above first.');
+    return;
+  }
+
+  addMessage('user', text);
+  history.push({ role: 'user', content: text });
+  input.value = '';
+  sendBtn.disabled = true;
+  const thinking = addMessage('system', 'thinking…');
+
+  try {
+    const data = await callGroq(apiKey, history);
+    thinking.remove();
+
+    if (data.error) {
+      addMessage('system', 'Error: ' + data.error.message);
+      history.pop();
+      return;
+    }
+
+    const reply = data.choices?.[0]?.message?.content || '(no response)';
+    addMessage('bot', reply);
+    history.push({ role: 'assistant', content: reply });
+  } catch (err) {
+    thinking.remove();
+    addMessage('system', 'Network error: ' + err.message);
+    history.pop();
+  } finally {
+    sendBtn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>

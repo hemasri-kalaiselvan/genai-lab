@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generative AI Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15191b;
+    --paper:#f3f1ea;
+    --paper-raised:#ffffff;
+    --line:#d9d5c7;
+    --amber:#b8752c;
+    --slate:#48626c;
+    --live:#3f6b4f;
+    --sans:'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+    --mono:'IBM Plex Mono', 'Courier New', monospace;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  header{
+    padding:56px 0 40px;
+    border-bottom:1px solid var(--line);
+  }
+  .kicker{
+    font-family:var(--mono);
+    font-size:0.78rem;
+    color:var(--amber);
+    letter-spacing:0.04em;
+    margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(2.1rem, 6vw, 3.2rem);
+    font-weight:700;
+    line-height:1.05;
+    margin:0 0 16px;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    max-width:56ch;
+    font-size:1.02rem;
+    line-height:1.6;
+    color:#4b4a44;
+    margin:0;
+  }
+
+  .board{
+    padding:36px 0 80px;
+  }
+  .board-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:20px;
+    font-family:var(--mono);
+    font-size:0.78rem;
+    color:#7a776c;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+    gap:14px;
+  }
+
+  .card{
+    position:relative;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    padding:20px 20px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-height:150px;
+  }
+  .card.live{
+    border-color:#c8bfa0;
+  }
+
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .num{
+    font-family:var(--mono);
+    font-size:0.75rem;
+    color:#9a9686;
+  }
+  .status{
+    font-family:var(--mono);
+    font-size:0.68rem;
+    padding:2px 8px;
+    border:1px solid var(--line);
+    color:#8a8778;
+    white-space:nowrap;
+  }
+  .status.live{
+    color:var(--live);
+    border-color:var(--live);
+  }
+
+  .card h2{
+    font-size:1.08rem;
+    font-weight:500;
+    margin:0;
+    line-height:1.3;
+  }
+  .card p{
+    font-size:0.88rem;
+    line-height:1.5;
+    color:#5c5a52;
+    margin:0;
+    flex:1;
+  }
+
+  .card a.open{
+    font-family:var(--mono);
+    font-size:0.8rem;
+    color:var(--slate);
+    text-decoration:none;
+    align-self:flex-start;
+    padding-top:4px;
+    border-top:1px solid var(--line);
+    width:100%;
+  }
+  .card.live a.open{
+    color:var(--amber);
+  }
+  .card a.open:hover{
+    text-decoration:underline;
+  }
+  .card.planned{
+    opacity:0.62;
+  }
+  .card.planned .card-bottom{
+    font-family:var(--mono);
+    font-size:0.8rem;
+    color:#9a9686;
+    padding-top:4px;
+    border-top:1px solid var(--line);
+  }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:22px 0 40px;
+    font-family:var(--mono);
+    font-size:0.75rem;
+    color:#8a8778;
+  }
+
+  @media (max-width:480px){
+    header{padding:40px 0 28px;}
+    .board{padding:28px 0 56px;}
+    .grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="kicker">GENERATIVE AI LAB — a running log of things built with generative AI</p>
+    <h1>Generative AI Lab</h1>
+    <p>Small, working generative-AI tools, built one at a time and shipped as they're finished. Each entry below is a standalone project — click into the ones that are live.</p>
+  </header>
+
+  <section class="board">
+    <div class="board-head">
+      <span>22 PROJECTS PLANNED</span>
+      <span>2 LIVE</span>
+    </div>
+
+    <div class="grid">
+
+      <div class="card live">
+        <div class="card-top">
+          <span class="num">01</span>
+          <span class="status live">LIVE</span>
+        </div>
+        <h2>Echo — Simple AI Chatbot</h2>
+        <p>A lightweight conversational chatbot running on a free, fast inference API.</p>
+        <a class="open" href="./projects/chatbot/" target="_blank" rel="noopener noreferrer">Open project</a>
+      </div>
+
+      <div class="card live">
+        <div class="card-top">
+          <span class="num">02</span>
+          <span class="status live">LIVE</span>
+        </div>
+        <h2>Chat with PDF</h2>
+        <p>Upload a PDF and ask questions about its contents.</p>
+        <a class="open" href="./projects/chat-with-pdf/" target="_blank" rel="noopener noreferrer">Open project</a>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">03</span><span class="status">PLANNED</span></div>
+        <h2>Document Summariser</h2>
+        <p>Condense long documents into clear, short summaries.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">04</span><span class="status">PLANNED</span></div>
+        <h2>YouTube Video Summariser</h2>
+        <p>Paste a link, get the key points of the video.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">05</span><span class="status">PLANNED</span></div>
+        <h2>Image Caption Generator</h2>
+        <p>Generate natural-language captions for any image.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">06</span><span class="status">PLANNED</span></div>
+        <h2>Text-to-Image Generator</h2>
+        <p>Turn a written prompt into a generated image.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">07</span><span class="status">PLANNED</span></div>
+        <h2>Resume Analyser</h2>
+        <p>Get structured feedback on a resume's content and clarity.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">08</span><span class="status">PLANNED</span></div>
+        <h2>Job Description Matcher</h2>
+        <p>Compare a resume against a job description and score the fit.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">09</span><span class="status">PLANNED</span></div>
+        <h2>Cover Letter Generator</h2>
+        <p>Draft a tailored cover letter from a resume and job posting.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">10</span><span class="status">PLANNED</span></div>
+        <h2>Blog &amp; Social Content Generator</h2>
+        <p>Draft posts and captions from a topic or outline.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">11</span><span class="status">PLANNED</span></div>
+        <h2>Grammar &amp; Writing Improver</h2>
+        <p>Clean up grammar, tone, and clarity in any passage.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">12</span><span class="status">PLANNED</span></div>
+        <h2>Language Translator</h2>
+        <p>Translate text between languages, instantly.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">13</span><span class="status">PLANNED</span></div>
+        <h2>Voice-Based AI Assistant</h2>
+        <p>Talk to the assistant instead of typing.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">14</span><span class="status">PLANNED</span></div>
+        <h2>Speech-to-Text Transcriber</h2>
+        <p>Turn spoken audio into written text.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">15</span><span class="status">PLANNED</span></div>
+        <h2>AI Quiz Generator</h2>
+        <p>Generate quiz questions from any topic or source text.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">16</span><span class="status">PLANNED</span></div>
+        <h2>AI Interview Practice</h2>
+        <p>Practice interview questions with live AI feedback.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">17</span><span class="status">PLANNED</span></div>
+        <h2>Research Paper Summariser</h2>
+        <p>Break dense papers down into plain-language summaries.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">18</span><span class="status">PLANNED</span></div>
+        <h2>Q&amp;A System (RAG)</h2>
+        <p>Answer questions grounded in a custom set of documents.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">19</span><span class="status">PLANNED</span></div>
+        <h2>Basic AI Agent</h2>
+        <p>An agent that reasons step-by-step using free tools.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">20</span><span class="status">PLANNED</span></div>
+        <h2>Sentiment &amp; Feedback Analyser</h2>
+        <p>Classify tone and sentiment in reviews or feedback text.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">21</span><span class="status">PLANNED</span></div>
+        <h2>Code Explainer &amp; Debugger</h2>
+        <p>Explain a code snippet or help track down a bug.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">22</span><span class="status">PLANNED</span></div>
+        <h2>Prompt Comparison Tool</h2>
+        <p>Test and compare prompt variations side by side.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">23</span><span class="status">PLANNED</span></div>
+        <h2>Small Model Fine-Tuning</h2>
+        <p>A small open-source model fine-tuning experiment.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+      <div class="card planned">
+        <div class="card-top"><span class="num">24</span><span class="status">PLANNED</span></div>
+        <h2>AI Output Evaluation Dashboard</h2>
+        <p>Track and compare AI output quality across runs.</p>
+        <div class="card-bottom">not yet built</div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    Generative AI Lab — built and maintained one project at a time.
+  </footer>
+</div>
+
+</body>
+</html>
