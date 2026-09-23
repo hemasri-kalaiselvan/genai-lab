@@ -27,7 +27,7 @@
   }
   header{
     width:100%;
-    max-width:720px;
+    max-width:900px;
     padding:28px 20px 14px;
     border-bottom:1px solid var(--line);
   }
@@ -45,7 +45,7 @@
   }
   main{
     width:100%;
-    max-width:720px;
+    max-width:900px;
     flex:1;
     display:flex;
     flex-direction:column;
@@ -59,6 +59,10 @@
     flex-direction:column;
     gap:14px;
     padding-bottom:12px;
+  }
+  @media (min-width:700px){
+    #log{ min-height:60vh; }
+    body{ font-size:1.03rem; }
   }
   .msg{
     max-width:82%;
@@ -183,7 +187,7 @@
   }
   button:disabled{opacity:0.5; cursor:default;}
   #setup{
-    max-width:720px;
+    max-width:900px;
     width:100%;
     padding:20px;
     font-family:'Helvetica Neue', Arial, sans-serif;
@@ -301,7 +305,19 @@ async function callGroq(apiKey, messages, attempt = 1) {
     return callGroq(apiKey, messages, attempt + 1);
   }
 
-  const retryable = data.error && (res.status === 429 || res.status >= 500);
+  // Rate-limited (429): Groq tells us how long to actually wait — use that,
+  // not a guess, since it's often 20-30+ seconds on the free tier.
+  const rateLimited = data.error && res.status === 429;
+  if (rateLimited && attempt < 3) {
+    const headerWait = parseFloat(res.headers.get('retry-after'));
+    const messageWait = parseFloat((data.error.message || '').match(/try again in ([\d.]+)s/i)?.[1]);
+    const waitSeconds = Math.min(Math.max(headerWait || messageWait || 5, 1) + 1, 60);
+    addMessage('system', 'Rate limit reached — waiting ' + Math.ceil(waitSeconds) + 's before retrying…');
+    await new Promise(r => setTimeout(r, waitSeconds * 1000));
+    return callGroq(apiKey, messages, attempt + 1);
+  }
+
+  const retryable = data.error && res.status >= 500;
   if (retryable && attempt < 3) {
     await new Promise(r => setTimeout(r, attempt * 1000));
     return callGroq(apiKey, messages, attempt + 1);

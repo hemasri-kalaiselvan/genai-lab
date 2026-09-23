@@ -52,7 +52,9 @@ Runs on Groq's free API.
 3. The app automatically asks Groq for its current list of available models and picks a working one itself — no model name is hardcoded, so it keeps working even after Groq retires or renames a model. It shows which model it picked as the first message in the chat.
 
 ### 02 — Chat with PDF
-Also runs on Groq's free API (same automatic model selection as above), plus pdf.js (loaded from a free CDN) for in-browser PDF text extraction.
+Also runs on Groq's free API (same automatic model selection as above, but tuned to favor higher-throughput models since this app sends larger payloads), plus pdf.js (loaded from a free CDN) for in-browser PDF text extraction.
 1. Same Groq key as the chatbot works here too — it's stored per-browser, not per-project
 2. Upload a PDF; the text is extracted entirely client-side and never uploaded anywhere except as plain text sent to Groq along with your question
-3. Long PDFs are truncated to the first ~60,000 characters to stay within the model's free-tier context limit — a note appears in the chat if this happens
+3. Long PDFs are truncated to the first ~14,000 characters — Groq's free tier caps requests at a fairly low tokens-per-minute budget (as low as ~6,000-8,000 on some models), and a full PDF's worth of text can exceed that in a single request even with light use. A note appears in the chat if truncation happens.
+4. Only the last few exchanges are kept in the running conversation (plus the original PDF text) so a longer back-and-forth doesn't keep growing the per-message token cost
+5. If a rate limit is still hit, the app reads Groq's own "try again in Ns" response and waits that long automatically before retrying, rather than giving up

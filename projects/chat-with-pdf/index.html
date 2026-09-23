@@ -28,7 +28,7 @@
   }
   header{
     width:100%;
-    max-width:720px;
+    max-width:900px;
     padding:28px 20px 14px;
     border-bottom:1px solid var(--line);
   }
@@ -52,7 +52,7 @@
 
   main{
     width:100%;
-    max-width:720px;
+    max-width:900px;
     flex:1;
     display:flex;
     flex-direction:column;
@@ -103,6 +103,10 @@
     flex-direction:column;
     gap:14px;
     padding-bottom:12px;
+  }
+  @media (min-width:700px){
+    #log{ min-height:50vh; }
+    body{ font-size:1.03rem; }
   }
   .msg{
     max-width:82%;
@@ -276,7 +280,7 @@ apiKeyInput.addEventListener('input', () => {
 
 let pdfText = '';
 let pdfName = '';
-const MAX_CHARS = 60000; // keeps the request comfortably inside the free-tier context limit
+const MAX_CHARS = 14000; // free-tier models cap tokens-per-minute (as low as ~6-8K); this keeps one request safely under that
 
 function addMessage(role, text) {
   const div = document.createElement('div');
@@ -359,13 +363,16 @@ let history = [];
 // Preference order: try these first if available, but never fail just
 // because none of them exist any more — always fall back to whatever
 // Groq's account actually has.
+// This app sends a larger payload (PDF text) than a plain chatbot, so it
+// favors models with a higher tokens-per-minute budget on the free tier
+// (smaller/faster models tend to get more headroom than the largest ones).
 const MODEL_PREFERENCE = [
+  'llama-3.1-8b-instant',
+  'moonshotai/kimi-k2-instruct',
+  'llama-3.3-70b-versatile',
   'openai/gpt-oss-120b',
   'openai/gpt-oss-20b',
-  'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant',
-  'qwen/qwen3.6-27b',
-  'moonshotai/kimi-k2-instruct'
+  'qwen/qwen3.6-27b'
 ];
 const NON_CHAT_MODEL = /whisper|tts|guard|prompt-guard/i;
 
@@ -417,7 +424,19 @@ async function callGroq(apiKey, messages, attempt = 1) {
     return callGroq(apiKey, messages, attempt + 1);
   }
 
-  const retryable = data.error && (res.status === 429 || res.status >= 500);
+  // Rate-limited (429): Groq tells us how long to actually wait — use that,
+  // not a guess, since it's often 20-30+ seconds on the free tier.
+  const rateLimited = data.error && res.status === 429;
+  if (rateLimited && attempt < 3) {
+    const headerWait = parseFloat(res.headers.get('retry-after'));
+    const messageWait = parseFloat((data.error.message || '').match(/try again in ([\d.]+)s/i)?.[1]);
+    const waitSeconds = Math.min(Math.max(headerWait || messageWait || 5, 1) + 1, 60);
+    addMessage('system', 'Rate limit reached — waiting ' + Math.ceil(waitSeconds) + 's before retrying…');
+    await new Promise(r => setTimeout(r, waitSeconds * 1000));
+    return callGroq(apiKey, messages, attempt + 1);
+  }
+
+  const retryable = data.error && res.status >= 500;
   if (retryable && attempt < 3) {
     await new Promise(r => setTimeout(r, attempt * 1000));
     return callGroq(apiKey, messages, attempt + 1);
@@ -452,6 +471,14 @@ form.addEventListener('submit', async (e) => {
     });
   }
   history.push({ role: 'user', content: text });
+
+  // Keep the system message (PDF text) plus only the last few exchanges —
+  // otherwise every extra turn adds to an already-large per-request token
+  // cost and makes hitting the free-tier per-minute limit more likely.
+  const MAX_TURNS = 6; // last 6 user+assistant messages (3 exchanges)
+  if (history.length > 1 + MAX_TURNS) {
+    history = [history[0], ...history.slice(-MAX_TURNS)];
+  }
 
   try {
     const data = await callGroq(apiKey, history);
