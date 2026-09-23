@@ -12,8 +12,9 @@ This is the only README in the repo. Every project lives in its own folder, but 
 genai-lab/
 ├── index.html              ← the landing page (this is the site's homepage)
 └── projects/
-    └── chatbot/
-        └── index.html      ← Echo, the chatbot (project #1)
+    ├── chatbot/index.html
+    ├── chat-with-pdf/index.html
+    └── document-summariser/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -58,3 +59,8 @@ Also runs on Groq's free API (same automatic model selection as above, but tuned
 3. Long PDFs are truncated to the first ~14,000 characters — Groq's free tier caps requests at a fairly low tokens-per-minute budget (as low as ~6,000-8,000 on some models), and a full PDF's worth of text can exceed that in a single request even with light use. A note appears in the chat if truncation happens.
 4. Only the last few exchanges are kept in the running conversation (plus the original PDF text) so a longer back-and-forth doesn't keep growing the per-message token cost
 5. If a rate limit is still hit, the app reads Groq's own "try again in Ns" response and waits that long automatically before retrying, rather than giving up
+
+### 03 — Document Summariser
+Same Groq setup and model-selection approach as the other two. Upload a PDF or .txt file, or paste text directly, pick a summary length (short/medium/detailed), and get a formatted markdown summary with a copy button.
+1. Same Groq key works here too
+2. Also caps input at ~14,000 characters for the same free-tier rate-limit reasons as Chat with PDF
