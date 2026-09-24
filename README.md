@@ -76,8 +76,8 @@ Same engine again, but for video transcripts instead of documents.
 3. Same 14,000-character cap and automatic model selection as the other tools
 
 ### 05 — Image Caption Generator
-Uses Groq's vision-capable models (`llama-4-scout` or `llama-4-maverick` — the only two free models on Groq that can look at images). Everything else follows the same pattern.
+Uses Groq's vision-capable model, `qwen/qwen3.8-27b` — currently the only model on Groq's free tier that can look at images (a couple of Llama 4 vision models existed earlier but were retired). Everything else follows the same pattern.
 1. Same Groq key works here too
 2. Upload an image; it's automatically resized in your browser (max 1024px on the longest side) before being sent, to keep requests small and fast
 3. Pick a caption style — plain description, social-media caption, or detailed alt text for accessibility
-4. The model is chosen automatically from the two vision models above, with the same self-healing fallback if one gets retired
+4. The model list in the code (`VISION_MODEL_PREFERENCE`) is a single entry today, but is written as a list so a future model addition or rename is a one-line edit, not a rewrite

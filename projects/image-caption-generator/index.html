@@ -264,12 +264,11 @@ function handleFile(file) {
   reader.readAsDataURL(file);
 }
 
-// Vision-capable models on Groq's free tier — only these two currently support images.
-// These are tried directly rather than checked against /v1/models first, because
-// preview/vision models don't always show up in that listing even when they work fine.
+// Vision-capable models on Groq's free tier. As of writing, Groq supports exactly
+// one vision model (qwen/qwen3.8-27b) — this list exists so a future addition or
+// rename only needs an edit here, not a rewrite of the fallback logic below.
 const VISION_MODEL_PREFERENCE = [
-  'meta-llama/llama-4-scout-17b-16e-instruct',
-  'meta-llama/llama-4-maverick-17b-128e-instruct'
+  'qwen/qwen3.8-27b'
 ];
 let modelIndex = 0;
 const storedModel = sessionStorage.getItem('genai_lab_groq_vision_model');
@@ -299,7 +298,7 @@ async function callGroq(apiKey, messages, attempt = 1) {
     return callGroq(apiKey, messages, attempt);
   }
   if (modelGone) {
-    throw new Error('No vision-capable model currently works on this Groq account. Check console.groq.com/docs/vision for the current list.');
+    throw new Error('No vision-capable model currently works on this Groq account. Check console.groq.com/docs/vision for the current model.');
   }
   sessionStorage.setItem('genai_lab_groq_vision_model', currentModel);
 
