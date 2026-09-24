@@ -265,32 +265,21 @@ function handleFile(file) {
 }
 
 // Vision-capable models on Groq's free tier — only these two currently support images.
+// These are tried directly rather than checked against /v1/models first, because
+// preview/vision models don't always show up in that listing even when they work fine.
 const VISION_MODEL_PREFERENCE = [
   'meta-llama/llama-4-scout-17b-16e-instruct',
   'meta-llama/llama-4-maverick-17b-128e-instruct'
 ];
-let currentModel = sessionStorage.getItem('genai_lab_groq_vision_model') || null;
-
-async function pickModel(apiKey) {
-  const res = await fetch('https://api.groq.com/openai/v1/models', {
-    headers: { 'Authorization': `Bearer ${apiKey}` }
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error?.message || 'Could not fetch the model list.');
-  const available = (data.data || []).map(m => m.id);
-  const chosen = VISION_MODEL_PREFERENCE.find(m => available.includes(m));
-  if (!chosen) throw new Error('No vision-capable model is currently available on this Groq account.');
-  currentModel = chosen;
-  sessionStorage.setItem('genai_lab_groq_vision_model', chosen);
-  return chosen;
+let modelIndex = 0;
+const storedModel = sessionStorage.getItem('genai_lab_groq_vision_model');
+if (storedModel) {
+  const idx = VISION_MODEL_PREFERENCE.indexOf(storedModel);
+  if (idx !== -1) modelIndex = idx;
 }
+let currentModel = VISION_MODEL_PREFERENCE[modelIndex];
 
 async function callGroq(apiKey, messages, attempt = 1) {
-  if (!currentModel) {
-    const chosen = await pickModel(apiKey);
-    status.textContent = 'Using model: ' + chosen;
-  }
-
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -301,14 +290,18 @@ async function callGroq(apiKey, messages, attempt = 1) {
   });
   const data = await res.json();
 
-  const modelGone = data.error && /does not exist|decommission|not found/i.test(data.error.message || '');
-  if (modelGone && attempt < 3) {
-    currentModel = null;
-    sessionStorage.removeItem('genai_lab_groq_vision_model');
-    const chosen = await pickModel(apiKey);
-    status.textContent = 'Previous model was retired — switched to: ' + chosen;
-    return callGroq(apiKey, messages, attempt + 1);
+  const modelGone = data.error && /does not exist|decommission|not found|not supported/i.test(data.error.message || '');
+  if (modelGone && modelIndex < VISION_MODEL_PREFERENCE.length - 1) {
+    modelIndex += 1;
+    currentModel = VISION_MODEL_PREFERENCE[modelIndex];
+    sessionStorage.setItem('genai_lab_groq_vision_model', currentModel);
+    status.textContent = 'Switched to model: ' + currentModel;
+    return callGroq(apiKey, messages, attempt);
   }
+  if (modelGone) {
+    throw new Error('No vision-capable model currently works on this Groq account. Check console.groq.com/docs/vision for the current list.');
+  }
+  sessionStorage.setItem('genai_lab_groq_vision_model', currentModel);
 
   const rateLimited = data.error && res.status === 429;
   if (rateLimited && attempt < 3) {
