@@ -289,16 +289,16 @@ async function callGroq(apiKey, messages, attempt = 1) {
   });
   const data = await res.json();
 
-  const modelGone = data.error && /does not exist|decommission|not found|not supported/i.test(data.error.message || '');
+  // Only treat this as "the model is gone" for genuine deprecation wording —
+  // a narrower match than before, so other errors (rate limits, access
+  // restrictions, bad requests) don't get misclassified and hidden.
+  const modelGone = data.error && /does not exist|decommission|has been retired|no longer (available|supported)/i.test(data.error.message || '');
   if (modelGone && modelIndex < VISION_MODEL_PREFERENCE.length - 1) {
     modelIndex += 1;
     currentModel = VISION_MODEL_PREFERENCE[modelIndex];
     sessionStorage.setItem('genai_lab_groq_vision_model', currentModel);
     status.textContent = 'Switched to model: ' + currentModel;
     return callGroq(apiKey, messages, attempt);
-  }
-  if (modelGone) {
-    throw new Error('No vision-capable model currently works on this Groq account. Check console.groq.com/docs/vision for the current model.');
   }
   sessionStorage.setItem('genai_lab_groq_vision_model', currentModel);
 
