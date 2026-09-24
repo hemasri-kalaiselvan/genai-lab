@@ -14,7 +14,8 @@ genai-lab/
 └── projects/
     ├── chatbot/index.html
     ├── chat-with-pdf/index.html
-    └── document-summariser/index.html
+    ├── document-summariser/index.html
+    └── youtube-summariser/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -64,3 +65,11 @@ Also runs on Groq's free API (same automatic model selection as above, but tuned
 Same Groq setup and model-selection approach as the other two. Upload a PDF or .txt file, or paste text directly, pick a summary length (short/medium/detailed), and get a formatted markdown summary with a copy button.
 1. Same Groq key works here too
 2. Also caps input at ~14,000 characters for the same free-tier rate-limit reasons as Chat with PDF
+
+### 04 — YouTube Video Summariser
+Same engine again, but for video transcripts instead of documents.
+1. This app deliberately does **not** try to auto-fetch a transcript from a pasted YouTube link — browsers can't read YouTube's caption data cross-origin (CORS blocks it), and there's no free public API for it. An "auto-fetch" version would look like it works and then fail unpredictably, so instead:
+   - Paste the transcript text directly (YouTube's own video page has a "Show transcript" option — click it, select all, copy, paste here), or
+   - Upload a downloaded `.srt`/`.vtt`/`.txt` transcript file — timestamps and sequence numbers are stripped automatically
+2. The video URL field is optional and only used to label the summary — it's not fetched or processed
+3. Same 14,000-character cap and automatic model selection as the other tools
