@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Caption Generator — Generative AI Lab</title>
+<style>
+  :root{
+    --ink:#1b1a17;
+    --paper:#f7f5f0;
+    --line:#d8d3c7;
+    --accent:#3d5a4a;
+    --accent-soft:#e7ede9;
+    --amber:#b8752c;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Georgia', 'Iowan Old Style', serif;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  header{
+    width:100%;
+    max-width:900px;
+    padding:28px 20px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  header a.back{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.78rem;
+    color:var(--amber);
+    text-decoration:none;
+  }
+  header h1{
+    margin:10px 0 0;
+    font-size:1.6rem;
+    font-weight:normal;
+  }
+  header p{
+    margin:6px 0 0;
+    font-size:0.9rem;
+    color:#6b675e;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+  }
+
+  main{
+    width:100%;
+    max-width:900px;
+    flex:1;
+    padding:20px;
+  }
+
+  #setup{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.88rem;
+    color:#6b675e;
+  }
+  #setup label{display:block; margin-top:12px;}
+  #setup input[type="password"]{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    margin-top:6px;
+  }
+
+  .drop{
+    margin-top:12px;
+    border:1px dashed var(--line);
+    border-radius:4px;
+    padding:20px;
+    text-align:center;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.85rem;
+    color:#8a8778;
+    cursor:pointer;
+    background:#fff;
+  }
+  .drop.ready{
+    border-color:var(--accent);
+    padding:12px;
+  }
+  #fileInput{display:none;}
+
+  #preview{
+    max-width:100%;
+    max-height:340px;
+    display:block;
+    margin:0 auto;
+    border-radius:4px;
+  }
+
+  .options{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:16px;
+    flex-wrap:wrap;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.85rem;
+    color:#6b675e;
+  }
+  select{
+    padding:6px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    background:#fff;
+  }
+  button.primary{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.9rem;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:9px 22px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  button.primary:disabled{opacity:0.5; cursor:default;}
+
+  #status{
+    margin-top:14px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.82rem;
+    color:#8a8578;
+  }
+
+  #result{
+    margin-top:22px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    display:none;
+  }
+  #resultBox{
+    background:var(--accent-soft);
+    padding:16px 18px;
+    border-radius:4px;
+    line-height:1.6;
+    font-size:1rem;
+    white-space:pre-wrap;
+  }
+  .copy-btn{
+    display:inline-block;
+    margin-top:10px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.75rem;
+    color:var(--accent);
+    background:none;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:4px 10px;
+    cursor:pointer;
+  }
+  .copy-btn.copied{color:#3f6b4f; border-color:#3f6b4f;}
+
+  @media (min-width:700px){
+    body{ font-size:1.03rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../">&larr; Generative AI Lab</a>
+  <h1>Image Caption Generator</h1>
+  <p>Upload an image and get a caption in the style you choose. The image is resized in your browser before sending, then only sent to Groq's free API — nowhere else.</p>
+</header>
+
+<main>
+  <div id="setup">
+    <label for="apiKey">Your free Groq API key</label>
+    <input id="apiKey" type="password" placeholder="Paste your key here — get one at console.groq.com/keys">
+
+    <div class="drop" id="drop">Click to choose an image, or drag one here</div>
+    <input id="fileInput" type="file" accept="image/*">
+
+    <div class="options">
+      <label for="style">Caption style</label>
+      <select id="style">
+        <option value="a plain, one-sentence description of what's in the image">Plain description</option>
+        <option value="a short, catchy social-media caption for" selected>Social media caption</option>
+        <option value="a detailed, accessibility-focused alt-text description of">Detailed alt text</option>
+      </select>
+      <button class="primary" id="generateBtn" disabled>Generate caption</button>
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <div id="result">
+    <div id="resultBox"></div>
+    <button class="copy-btn" id="copyBtn" type="button">Copy caption</button>
+  </div>
+</main>
+
+<script>
+const apiKeyInput = document.getElementById('apiKey');
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('fileInput');
+const generateBtn = document.getElementById('generateBtn');
+const styleSelect = document.getElementById('style');
+const status = document.getElementById('status');
+const result = document.getElementById('result');
+const resultBox = document.getElementById('resultBox');
+const copyBtn = document.getElementById('copyBtn');
+
+apiKeyInput.value = localStorage.getItem('genai_lab_groq_key') || '';
+apiKeyInput.addEventListener('input', () => {
+  localStorage.setItem('genai_lab_groq_key', apiKeyInput.value.trim());
+});
+
+let imageDataUrl = '';
+const MAX_DIMENSION = 1024; // downscale before sending, keeps requests small and fast
+
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('dragover', (e) => e.preventDefault());
+drop.addEventListener('drop', (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+function handleFile(file) {
+  if (!file.type.startsWith('image/')) {
+    drop.textContent = 'That is not an image — try another file.';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        const scale = MAX_DIMENSION / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+      drop.innerHTML = '';
+      drop.classList.add('ready');
+      const preview = document.createElement('img');
+      preview.id = 'preview';
+      preview.src = imageDataUrl;
+      drop.appendChild(preview);
+      generateBtn.disabled = false;
+      result.style.display = 'none';
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Vision-capable models on Groq's free tier — only these two currently support images.
+const VISION_MODEL_PREFERENCE = [
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'meta-llama/llama-4-maverick-17b-128e-instruct'
+];
+let currentModel = sessionStorage.getItem('genai_lab_groq_vision_model') || null;
+
+async function pickModel(apiKey) {
+  const res = await fetch('https://api.groq.com/openai/v1/models', {
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'Could not fetch the model list.');
+  const available = (data.data || []).map(m => m.id);
+  const chosen = VISION_MODEL_PREFERENCE.find(m => available.includes(m));
+  if (!chosen) throw new Error('No vision-capable model is currently available on this Groq account.');
+  currentModel = chosen;
+  sessionStorage.setItem('genai_lab_groq_vision_model', chosen);
+  return chosen;
+}
+
+async function callGroq(apiKey, messages, attempt = 1) {
+  if (!currentModel) {
+    const chosen = await pickModel(apiKey);
+    status.textContent = 'Using model: ' + chosen;
+  }
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({ model: currentModel, messages })
+  });
+  const data = await res.json();
+
+  const modelGone = data.error && /does not exist|decommission|not found/i.test(data.error.message || '');
+  if (modelGone && attempt < 3) {
+    currentModel = null;
+    sessionStorage.removeItem('genai_lab_groq_vision_model');
+    const chosen = await pickModel(apiKey);
+    status.textContent = 'Previous model was retired — switched to: ' + chosen;
+    return callGroq(apiKey, messages, attempt + 1);
+  }
+
+  const rateLimited = data.error && res.status === 429;
+  if (rateLimited && attempt < 3) {
+    const headerWait = parseFloat(res.headers.get('retry-after'));
+    const messageWait = parseFloat((data.error.message || '').match(/try again in ([\d.]+)s/i)?.[1]);
+    const waitSeconds = Math.min(Math.max(headerWait || messageWait || 5, 1) + 1, 60);
+    status.textContent = 'Rate limit reached — waiting ' + Math.ceil(waitSeconds) + 's before retrying…';
+    await new Promise(r => setTimeout(r, waitSeconds * 1000));
+    return callGroq(apiKey, messages, attempt + 1);
+  }
+
+  const retryable = data.error && res.status >= 500;
+  if (retryable && attempt < 3) {
+    await new Promise(r => setTimeout(r, attempt * 1000));
+    return callGroq(apiKey, messages, attempt + 1);
+  }
+  return data;
+}
+
+generateBtn.addEventListener('click', async () => {
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) {
+    status.textContent = 'Add your free Groq API key above first.';
+    return;
+  }
+  if (!imageDataUrl) {
+    status.textContent = 'Add an image first.';
+    return;
+  }
+
+  generateBtn.disabled = true;
+  result.style.display = 'none';
+  status.textContent = 'Looking at the image…';
+
+  const styleInstruction = styleSelect.value;
+  const messages = [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Write ' + styleInstruction + ' this image. Respond with only the caption text, no preamble or quotation marks.' },
+        { type: 'image_url', image_url: { url: imageDataUrl } }
+      ]
+    }
+  ];
+
+  try {
+    const data = await callGroq(apiKey, messages);
+    if (data.error) {
+      status.textContent = 'Error: ' + data.error.message;
+      return;
+    }
+    const caption = data.choices?.[0]?.message?.content?.trim() || '(no response)';
+    resultBox.textContent = caption;
+    result.style.display = 'block';
+    status.textContent = '';
+    copyBtn.dataset.raw = caption;
+  } catch (err) {
+    status.textContent = 'Network error: ' + err.message;
+  } finally {
+    generateBtn.disabled = false;
+  }
+});
+
+copyBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(copyBtn.dataset.raw || '');
+    copyBtn.textContent = 'Copied';
+    copyBtn.classList.add('copied');
+    setTimeout(() => {
+      copyBtn.textContent = 'Copy caption';
+      copyBtn.classList.remove('copied');
+    }, 1500);
+  } catch (err) {
+    copyBtn.textContent = 'Could not copy';
+  }
+});
+</script>
+
+</body>
+</html>

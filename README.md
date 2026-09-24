@@ -15,7 +15,8 @@ genai-lab/
     ├── chatbot/index.html
     ├── chat-with-pdf/index.html
     ├── document-summariser/index.html
-    └── youtube-summariser/index.html
+    ├── youtube-summariser/index.html
+    └── image-caption-generator/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -73,3 +74,10 @@ Same engine again, but for video transcripts instead of documents.
    - Upload a downloaded `.srt`/`.vtt`/`.txt` transcript file — timestamps and sequence numbers are stripped automatically
 2. The video URL field is optional and only used to label the summary — it's not fetched or processed
 3. Same 14,000-character cap and automatic model selection as the other tools
+
+### 05 — Image Caption Generator
+Uses Groq's vision-capable models (`llama-4-scout` or `llama-4-maverick` — the only two free models on Groq that can look at images). Everything else follows the same pattern.
+1. Same Groq key works here too
+2. Upload an image; it's automatically resized in your browser (max 1024px on the longest side) before being sent, to keep requests small and fast
+3. Pick a caption style — plain description, social-media caption, or detailed alt text for accessibility
+4. The model is chosen automatically from the two vision models above, with the same self-healing fallback if one gets retired
