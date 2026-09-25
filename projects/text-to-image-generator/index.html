@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text-to-Image Generator — Generative AI Lab</title>
+<style>
+  :root{
+    --ink:#1b1a17;
+    --paper:#f7f5f0;
+    --line:#d8d3c7;
+    --accent:#3d5a4a;
+    --accent-soft:#e7ede9;
+    --amber:#b8752c;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Georgia', 'Iowan Old Style', serif;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  header{
+    width:100%;
+    max-width:900px;
+    padding:28px 20px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  header a.back{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.78rem;
+    color:var(--amber);
+    text-decoration:none;
+  }
+  header h1{
+    margin:10px 0 0;
+    font-size:1.6rem;
+    font-weight:normal;
+  }
+  header p{
+    margin:6px 0 0;
+    font-size:0.9rem;
+    color:#6b675e;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+  }
+  .badge{
+    display:inline-block;
+    margin-top:10px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.72rem;
+    color:var(--accent);
+    background:var(--accent-soft);
+    padding:3px 9px;
+    border-radius:3px;
+  }
+
+  main{
+    width:100%;
+    max-width:900px;
+    flex:1;
+    padding:20px;
+  }
+
+  #setup{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.88rem;
+    color:#6b675e;
+  }
+  #promptArea{
+    width:100%;
+    min-height:80px;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    font-family:inherit;
+    font-size:0.98rem;
+    resize:vertical;
+    background:#fff;
+    color:var(--ink);
+  }
+
+  .options{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:14px;
+    flex-wrap:wrap;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.85rem;
+    color:#6b675e;
+  }
+  select, input[type="number"]{
+    padding:6px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    background:#fff;
+  }
+  input[type="number"]{ width:110px; }
+  .seed-group{ display:flex; align-items:center; gap:6px; }
+  button.secondary{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.78rem;
+    background:none;
+    color:var(--accent);
+    border:1px solid var(--line);
+    padding:5px 10px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  button.primary{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.9rem;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:9px 22px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  button.primary:disabled{opacity:0.5; cursor:default;}
+
+  #status{
+    margin-top:14px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.82rem;
+    color:#8a8578;
+  }
+
+  #result{
+    margin-top:22px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    display:none;
+  }
+  #imageWrap{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:10px;
+    text-align:center;
+  }
+  #generatedImage{
+    max-width:100%;
+    display:block;
+    margin:0 auto;
+    border-radius:2px;
+  }
+  #openLink{
+    display:inline-block;
+    margin-top:10px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.78rem;
+    color:var(--accent);
+  }
+
+  @media (min-width:700px){
+    body{ font-size:1.03rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../">&larr; Generative AI Lab</a>
+  <h1>Text-to-Image Generator</h1>
+  <p>Describe an image and generate it. This one needs no API key at all — it runs on Pollinations.ai, a free, keyless image generation service.</p>
+  <span class="badge">No API key needed</span>
+</header>
+
+<main>
+  <div id="setup">
+    <label for="promptArea">Describe the image</label>
+    <textarea id="promptArea" placeholder="e.g. a lighthouse on a cliff at sunset, watercolor style"></textarea>
+
+    <div class="options">
+      <label for="size">Size</label>
+      <select id="size">
+        <option value="1024,1024" selected>Square (1024×1024)</option>
+        <option value="1024,768">Landscape (1024×768)</option>
+        <option value="768,1024">Portrait (768×1024)</option>
+        <option value="1280,720">Widescreen (1280×720)</option>
+      </select>
+
+      <label for="model">Style</label>
+      <select id="model">
+        <option value="flux" selected>Default</option>
+        <option value="flux-realism">Realistic</option>
+        <option value="flux-anime">Anime</option>
+        <option value="turbo">Fast / draft</option>
+      </select>
+
+      <div class="seed-group">
+        <label for="seed">Seed</label>
+        <input id="seed" type="number" min="0" placeholder="random">
+        <button type="button" class="secondary" id="randomSeedBtn">Randomize</button>
+      </div>
+    </div>
+
+    <div class="options">
+      <button class="primary" id="generateBtn">Generate image</button>
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <div id="result">
+    <div id="imageWrap">
+      <img id="generatedImage" alt="Generated image">
+    </div>
+    <a id="openLink" href="#" target="_blank" rel="noopener noreferrer">Open full image in a new tab (to save it)</a>
+  </div>
+</main>
+
+<script>
+const promptArea = document.getElementById('promptArea');
+const sizeSelect = document.getElementById('size');
+const modelSelect = document.getElementById('model');
+const seedInput = document.getElementById('seed');
+const randomSeedBtn = document.getElementById('randomSeedBtn');
+const generateBtn = document.getElementById('generateBtn');
+const status = document.getElementById('status');
+const result = document.getElementById('result');
+const img = document.getElementById('generatedImage');
+const openLink = document.getElementById('openLink');
+
+randomSeedBtn.addEventListener('click', () => {
+  seedInput.value = Math.floor(Math.random() * 1000000);
+});
+
+// The free anonymous Pollinations tier allows roughly one request per 15
+// seconds. Cooling down client-side avoids sending requests that would just
+// fail or return a broken image.
+const COOLDOWN_SECONDS = 16;
+let cooldownUntil = 0;
+
+function buildImageUrl() {
+  const prompt = promptArea.value.trim();
+  const [width, height] = sizeSelect.value.split(',');
+  const model = modelSelect.value;
+  const seed = seedInput.value.trim() || Math.floor(Math.random() * 1000000);
+  const params = new URLSearchParams({
+    width, height, model, seed,
+    nologo: 'true'
+  });
+  return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?' + params.toString();
+}
+
+function startCooldown() {
+  cooldownUntil = Date.now() + COOLDOWN_SECONDS * 1000;
+  generateBtn.disabled = true;
+  const tick = () => {
+    const remaining = Math.ceil((cooldownUntil - Date.now()) / 1000);
+    if (remaining <= 0) {
+      generateBtn.disabled = false;
+      generateBtn.textContent = 'Generate image';
+      return;
+    }
+    generateBtn.textContent = 'Wait ' + remaining + 's…';
+    setTimeout(tick, 250);
+  };
+  tick();
+}
+
+generateBtn.addEventListener('click', () => {
+  const prompt = promptArea.value.trim();
+  if (!prompt) {
+    status.textContent = 'Describe an image first.';
+    return;
+  }
+  if (Date.now() < cooldownUntil) return;
+
+  const url = buildImageUrl();
+  status.textContent = 'Generating…';
+  result.style.display = 'none';
+
+  img.onload = () => {
+    status.textContent = '';
+    result.style.display = 'block';
+    openLink.href = url;
+  };
+  img.onerror = () => {
+    status.textContent = 'The image service did not respond — this is a free third-party service and occasionally slow or rate-limited. Wait a moment and try again.';
+  };
+  img.src = url;
+
+  startCooldown();
+});
+</script>
+
+</body>
+</html>

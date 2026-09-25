@@ -16,7 +16,8 @@ genai-lab/
     ├── chat-with-pdf/index.html
     ├── document-summariser/index.html
     ├── youtube-summariser/index.html
-    └── image-caption-generator/index.html
+    ├── image-caption-generator/index.html
+    └── text-to-image-generator/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -81,3 +82,10 @@ Uses Groq's vision-capable model, `qwen/qwen3.8-27b` — currently the only mode
 2. Upload an image; it's automatically resized in your browser (max 1024px on the longest side) before being sent, to keep requests small and fast
 3. Pick a caption style — plain description, social-media caption, or detailed alt text for accessibility
 4. The model list in the code (`VISION_MODEL_PREFERENCE`) is a single entry today, but is written as a list so a future model addition or rename is a one-line edit, not a rewrite
+
+### 06 — Text-to-Image Generator
+The only project that needs **no API key at all**. Runs on [Pollinations.ai](https://pollinations.ai) — a free, open-source image generation service with no signup and no key required for its anonymous tier.
+1. Just type a description, pick a size and style, and generate
+2. The anonymous tier is rate-limited to roughly one image per 15 seconds — the app enforces a 16-second cooldown on the Generate button so you don't send requests that would just fail
+3. There's a seed field (with a Randomize button) — using the same seed, prompt, size, and style again reproduces the same image, useful for small tweaks
+4. Since this is someone else's free public service rather than our own key-based setup, it can occasionally be slower or briefly unavailable — the app shows a plain message if an image fails to load rather than a cryptic error
