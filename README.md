@@ -19,7 +19,8 @@ genai-lab/
     ├── image-caption-generator/index.html
     ├── text-to-image-generator/index.html
     ├── resume-analyser/index.html
-    └── job-description-matcher/index.html
+    ├── job-description-matcher/index.html
+    └── cover-letter-generator/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -106,3 +107,11 @@ Same Groq engine as the others. Upload or paste a resume, paste a job descriptio
 2. Output is structured as: Match Score (a percentage with justification), What Matches Well, Gaps & Missing Requirements, Keywords to Add, and Suggested Resume Tweaks
 3. The model is explicitly told never to suggest fabricating experience — tweaks are about presentation and emphasis, not invention
 4. Since two documents share one request now, each is capped at ~9,000 characters instead of 14,000, to stay within the same free-tier rate limits
+
+### 09 — Cover Letter Generator
+Same Groq engine, resume input (upload or paste), and job description paste as the Matcher — this one drafts a letter instead of scoring a fit.
+1. Same Groq key works here too
+2. Optional fields: your name and the hiring manager/company name, for personalization — left blank, the letter uses a generic professional greeting instead of a placeholder
+3. Three tone options: Warm & enthusiastic, Formal & traditional, Concise & direct
+4. The model is explicitly instructed to use only real resume content — it will not invent or exaggerate experience to better fit the job
+5. Same ~9,000-character-per-document cap as the Job Description Matcher, since two documents share one request
