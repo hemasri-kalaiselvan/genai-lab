@@ -1,5 +1,13 @@
 # Generative AI Lab
 
+> A personal portal of small, working generative-AI tools — each a standalone project, linked from one landing page, deployed free on GitHub Pages.
+
+**Tech:** HTML, CSS, JavaScript
+**Tools:** GitHub, Groq, Pollinations.ai, pdf.js
+**AI Tools:** Claude
+
+## About
+
 A personal portal of small, working generative-AI tools — each one a standalone project, linked from a single landing page. Deployed as a static site with GitHub Pages. No install, no build step, no cost.
 
 **GitHub repository name:** `genai-lab`
@@ -49,6 +57,13 @@ That's the link for your portfolio. It works on mobile and desktop — the layou
    - replace the `<div class="card-bottom">not yet built</div>` line with a link that opens in a new tab: `<a class="open" href="./projects/pdf-chat/" target="_blank" rel="noopener noreferrer">Open project</a>`
 4. Add any setup notes that project needs to the relevant section below
 5. Re-upload the changed files to GitHub — the site updates automatically
+
+## How AI Helped
+
+- **Claude** — design direction, code, debugging, and deployment across all nine tools
+- Worked through real, provider-specific problems: automatic model selection so tools keep working when Groq retires or renames a model; client-side rate-limit handling that reads Groq's own retry hints; and reading Pollinations'  live model list instead of hardcoding names
+
+---
 
 ## Project setup notes
 
