@@ -3,8 +3,8 @@
 > A personal portal of small, working generative-AI tools — each a standalone project, linked from one landing page, deployed free on GitHub Pages.
 
 **Tech:** HTML, CSS, JavaScript
-**Tools:** GitHub, Groq, Pollinations.ai, pdf.js
-**AI Tools:** Claude
+**Tools:** GitHub, pdf.js
+**AI Tools:** Claude, Groq, Pollinations.ai
 
 ## About
 
