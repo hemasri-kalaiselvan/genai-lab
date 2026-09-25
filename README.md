@@ -18,7 +18,8 @@ genai-lab/
     ├── youtube-summariser/index.html
     ├── image-caption-generator/index.html
     ├── text-to-image-generator/index.html
-    └── resume-analyser/index.html
+    ├── resume-analyser/index.html
+    └── job-description-matcher/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -98,3 +99,10 @@ Same Groq setup and model-selection approach as the summarisers. Upload a resume
 2. Feedback is organized into fixed sections: Overall Impression, Strengths, Areas to Improve, Formatting & Clarity, and Suggested Next Steps
 3. The optional "target role" field sharpens the feedback toward that specific job without requiring it
 4. Same 14,000-character cap, automatic model selection, and rate-limit handling as the other text-based tools
+
+### 08 — Job Description Matcher
+Same Groq engine as the others. Upload or paste a resume, paste a job description, and get a fit assessment.
+1. Same Groq key works here too
+2. Output is structured as: Match Score (a percentage with justification), What Matches Well, Gaps & Missing Requirements, Keywords to Add, and Suggested Resume Tweaks
+3. The model is explicitly told never to suggest fabricating experience — tweaks are about presentation and emphasis, not invention
+4. Since two documents share one request now, each is capped at ~9,000 characters instead of 14,000, to stay within the same free-tier rate limits
