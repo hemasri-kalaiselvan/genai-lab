@@ -188,10 +188,7 @@
 
       <label for="model">Style</label>
       <select id="model">
-        <option value="flux" selected>Default</option>
-        <option value="flux-realism">Realistic</option>
-        <option value="flux-anime">Anime</option>
-        <option value="turbo">Fast / draft</option>
+        <option value="" selected>Loading available styles…</option>
       </select>
 
       <div class="seed-group">
@@ -228,6 +225,51 @@ const result = document.getElementById('result');
 const img = document.getElementById('generatedImage');
 const openLink = document.getElementById('openLink');
 
+// Friendlier labels for model IDs we recognize; anything else falls back to
+// a title-cased version of the raw ID, since Pollinations' lineup changes
+// over time and this shouldn't require editing code to keep working.
+const KNOWN_LABELS = {
+  flux: 'Default',
+  turbo: 'Fast / draft',
+  'flux-realism': 'Realistic',
+  'flux-anime': 'Anime',
+  kontext: 'Context-aware',
+  sana: 'Default'
+};
+
+function labelFor(modelId) {
+  if (KNOWN_LABELS[modelId]) return KNOWN_LABELS[modelId];
+  return modelId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+async function loadModels() {
+  try {
+    const res = await fetch('https://image.pollinations.ai/models');
+    const models = await res.json();
+    if (!Array.isArray(models) || models.length === 0) throw new Error('empty list');
+
+    modelSelect.innerHTML = '';
+    // Prefer a familiar default if it's still offered; otherwise just use
+    // whatever the service currently lists first.
+    const preferredOrder = ['flux', 'sana', 'turbo'];
+    const ordered = [
+      ...preferredOrder.filter(m => models.includes(m)),
+      ...models.filter(m => !preferredOrder.includes(m))
+    ];
+    ordered.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = labelFor(m);
+      modelSelect.appendChild(opt);
+    });
+  } catch (err) {
+    // Couldn't fetch the list — fall back to no model param at all and let
+    // Pollinations use whatever its own current default is.
+    modelSelect.innerHTML = '<option value="">Default</option>';
+  }
+}
+loadModels();
+
 randomSeedBtn.addEventListener('click', () => {
   seedInput.value = Math.floor(Math.random() * 1000000);
 });
@@ -238,15 +280,13 @@ randomSeedBtn.addEventListener('click', () => {
 const COOLDOWN_SECONDS = 16;
 let cooldownUntil = 0;
 
-function buildImageUrl() {
+function buildImageUrl(overrideModel) {
   const prompt = promptArea.value.trim();
   const [width, height] = sizeSelect.value.split(',');
-  const model = modelSelect.value;
+  const model = overrideModel !== undefined ? overrideModel : modelSelect.value;
   const seed = seedInput.value.trim() || Math.floor(Math.random() * 1000000);
-  const params = new URLSearchParams({
-    width, height, model, seed,
-    nologo: 'true'
-  });
+  const params = new URLSearchParams({ width, height, seed, nologo: 'true' });
+  if (model) params.set('model', model);
   return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?' + params.toString();
 }
 
@@ -266,16 +306,9 @@ function startCooldown() {
   tick();
 }
 
-generateBtn.addEventListener('click', () => {
-  const prompt = promptArea.value.trim();
-  if (!prompt) {
-    status.textContent = 'Describe an image first.';
-    return;
-  }
-  if (Date.now() < cooldownUntil) return;
-
-  const url = buildImageUrl();
-  status.textContent = 'Generating…';
+function attemptGenerate(overrideModel, isRetry) {
+  const url = buildImageUrl(overrideModel);
+  status.textContent = isRetry ? 'Retrying with the default style…' : 'Generating…';
   result.style.display = 'none';
 
   img.onload = () => {
@@ -284,10 +317,26 @@ generateBtn.addEventListener('click', () => {
     openLink.href = url;
   };
   img.onerror = () => {
+    if (!isRetry) {
+      // The selected style may have just been retired on Pollinations' end —
+      // retry once with no model param before giving up.
+      attemptGenerate('', true);
+      return;
+    }
     status.textContent = 'The image service did not respond — this is a free third-party service and occasionally slow or rate-limited. Wait a moment and try again.';
   };
   img.src = url;
+}
 
+generateBtn.addEventListener('click', () => {
+  const prompt = promptArea.value.trim();
+  if (!prompt) {
+    status.textContent = 'Describe an image first.';
+    return;
+  }
+  if (Date.now() < cooldownUntil) return;
+
+  attemptGenerate();
   startCooldown();
 });
 </script>
