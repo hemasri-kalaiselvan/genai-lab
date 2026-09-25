@@ -17,7 +17,8 @@ genai-lab/
     ├── document-summariser/index.html
     ├── youtube-summariser/index.html
     ├── image-caption-generator/index.html
-    └── text-to-image-generator/index.html
+    ├── text-to-image-generator/index.html
+    └── resume-analyser/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -90,3 +91,10 @@ The only project that needs **no API key at all**. Runs on [Pollinations.ai](htt
 3. There's a seed field (with a Randomize button) — using the same seed, prompt, size, and style again reproduces the same image, useful for small tweaks
 4. Since this is someone else's free public service rather than our own key-based setup, it can occasionally be slower or briefly unavailable — the app shows a plain message if an image fails to load rather than a cryptic error
 5. The "Style" dropdown is populated from Pollinations' own live model list at page load, rather than a fixed set of names — this service has changed its available models entirely more than once, and hardcoded names silently broke every time. If a chosen style ever gets retired mid-session, generation automatically retries once with no style specified before giving up.
+
+### 07 — Resume Analyser
+Same Groq setup and model-selection approach as the summarisers. Upload a resume as PDF or .txt, or paste text directly, optionally name a target role, and get structured feedback.
+1. Same Groq key works here too
+2. Feedback is organized into fixed sections: Overall Impression, Strengths, Areas to Improve, Formatting & Clarity, and Suggested Next Steps
+3. The optional "target role" field sharpens the feedback toward that specific job without requiring it
+4. Same 14,000-character cap, automatic model selection, and rate-limit handling as the other text-based tools
