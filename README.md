@@ -4,7 +4,7 @@
 
 **Tech:** HTML, CSS, JavaScript
 **Tools:** GitHub, pdf.js
-**AI Tools:** Claude, Groq, Pollinations.ai
+**AI Tools:** Claude, Groq API, Qwen Vision, Whisper, Pollinations.ai, SmolLM2, Hugging Face Transformers, Datasets, TRL, PEFT/LoRA, Google Colab
 
 ## About
 A personal portal of small, working generative-AI tools — each one a standalone project, linked from a single landing page. Deployed as a static site with GitHub Pages. No install, no build step, no cost.
@@ -76,6 +76,89 @@ That's the link for your portfolio. It works on mobile and desktop — the layou
 
 - **Claude** — design direction, code, debugging, and deployment across all nine tools
 - Worked through real, provider-specific problems: automatic model selection so tools keep working when Groq retires or renames a model; client-side rate-limit handling that reads Groq's own retry hints; and reading Pollinations'  live model list instead of hardcoding names
+
+## AI Tools and Technologies Used
+
+This repository contains 24 browser-based generative-AI projects. Most projects use free or open-source AI services and run without a dedicated backend.
+
+### Core AI tools
+
+| AI tool | Purpose | Projects |
+|---|---|---|
+| **Groq API** | Chat, summarization, analysis, content generation, translation, evaluation, and reasoning | Most projects |
+| **Qwen Vision via Groq** | Image understanding and caption generation | 05 |
+| **Whisper via Groq** | Audio transcription and speech-to-text | 14 |
+| **Pollinations.ai** | Text-to-image generation | 06 |
+| **SmolLM2-135M-Instruct** | Small language-model fine-tuning | 23 |
+| **Hugging Face Transformers** | Model loading, tokenization, training, and inference | 23 |
+| **Hugging Face TRL** | Supervised fine-tuning | 23 |
+| **PEFT / LoRA** | Parameter-efficient model fine-tuning | 23 |
+| **Google Colab** | Cloud notebook environment for model training | 23 |
+
+### Groq language models
+
+The Groq-powered applications retrieve the currently available models and automatically select a suitable model. Depending on availability, preferred models may include:
+
+- `llama-3.1-8b-instant`
+- `moonshotai/kimi-k2-instruct`
+- `llama-3.3-70b-versatile`
+- `openai/gpt-oss-120b`
+- `openai/gpt-oss-20b`
+- Available Qwen chat or vision models
+
+This automatic selection helps the projects continue working when a model is renamed, retired, or temporarily unavailable.
+
+### AI tools by project
+
+| No. | Project | AI tools and related technology |
+|---:|---|---|
+| 01 | Echo Chatbot | Groq API |
+| 02 | Chat with PDF | Groq API, PDF.js |
+| 03 | Document Summariser | Groq API, PDF.js |
+| 04 | YouTube Video Summariser | Groq API, pasted or uploaded transcripts |
+| 05 | Image Caption Generator | Groq API, Qwen Vision, Canvas API |
+| 06 | Text-to-Image Generator | Pollinations.ai |
+| 07 | Resume Analyser | Groq API, PDF.js |
+| 08 | Job Description Matcher | Groq API, PDF.js |
+| 09 | Cover Letter Generator | Groq API, PDF.js |
+| 10 | Blog & Social Content Generator | Groq API |
+| 11 | Grammar & Writing Improver | Groq API |
+| 12 | Language Translator | Groq API |
+| 13 | Voice AI Assistant | Groq API, Web Speech Recognition, Speech Synthesis |
+| 14 | Speech-to-Text Transcriber | Groq Whisper, MediaRecorder API |
+| 15 | AI Quiz Generator | Groq API, browser-based answer scoring |
+| 16 | AI Interview Practice | Groq API |
+| 17 | Research Paper Summariser | Groq API, PDF.js |
+| 18 | Document Q&A / RAG | Groq API, PDF.js, client-side text retrieval |
+| 19 | Basic AI Agent | Groq API, calculator, unit, date, and text tools |
+| 20 | Sentiment & Feedback Analyser | Groq API |
+| 21 | Code Explainer & Debugger | Groq API |
+| 22 | Prompt Comparison Tool | Groq API, blinded output evaluation |
+| 23 | Small-Model Fine-Tuning | SmolLM2, Google Colab, Transformers, Datasets, TRL, PEFT, and LoRA |
+| 24 | AI Output Evaluation Dashboard | Groq API, anonymized AI judging |
+
+### Supporting web technologies
+
+- HTML, CSS, and vanilla JavaScript
+- PDF.js for in-browser PDF text extraction
+- Marked.js for rendering Markdown output
+- DOMPurify for sanitizing generated HTML
+- Web Speech API for voice input and spoken responses
+- MediaRecorder API for recording audio
+- Canvas API for resizing images before processing
+- Browser local storage and session storage
+- JSON, JSONL, and CSV data formats
+- GitHub Pages for free static hosting
+
+### Architecture and limitations
+
+- Most projects use one free Groq API key entered directly in the browser.
+- The API key is stored only in the user's browser.
+- PDF and image preprocessing happens locally before relevant content is sent to an AI service.
+- The projects do not require a paid backend or local AI installation.
+- The repository does not currently use LangChain or a vector database.
+- Project 18 demonstrates a lightweight client-side RAG-style workflow rather than a production vector-database architecture.
+- Project 23 is the exception to the browser-only pattern because model fine-tuning runs in Google Colab.
 
 ---
 ## Project setup notes
