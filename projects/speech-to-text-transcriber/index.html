@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speech-to-Text Transcriber — Generative AI Lab</title>
+<style>
+  :root{--ink:#1a1c1c;--paper:#f5f3ed;--line:#d8d3c7;--accent:#275f68;--accent-soft:#e3eef0;--red:#aa4439;--amber:#b8752c}
+  *{box-sizing:border-box}html,body{height:100%}
+  body{margin:0;font-family:'Helvetica Neue',Arial,sans-serif;background:var(--paper);color:var(--ink);display:flex;flex-direction:column;align-items:center}
+  header{width:100%;max-width:860px;padding:28px 20px 14px;border-bottom:1px solid var(--line)}
+  header a{font-size:.78rem;color:var(--amber);text-decoration:none}header h1{font:normal 1.6rem Georgia,'Iowan Old Style',serif;margin:10px 0 0}header p{margin:6px 0 0;font-size:.9rem;line-height:1.5;color:#6b675e}
+  main{width:100%;max-width:860px;flex:1;padding:20px}
+  .setup{font-size:.86rem;color:#686258}.setup label{display:block;margin-top:12px}input,select,textarea{width:100%;margin-top:6px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);font:inherit}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.source-card{margin-top:18px;padding:18px;border:1px solid var(--line);border-radius:6px;background:#fff;text-align:center}
+  .record{width:72px;height:72px;border:0;border-radius:50%;background:var(--accent);color:#fff;font-size:1.65rem;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.14)}.record.recording{background:var(--red);animation:pulse 1.2s infinite}.record:disabled{opacity:.45;cursor:default}
+  @keyframes pulse{50%{transform:scale(1.07);box-shadow:0 0 0 11px rgba(170,68,57,.12)}}
+  #timer{margin:10px 0 3px;font-family:'Courier New',monospace;color:#777065}.or{display:flex;align-items:center;gap:10px;margin:16px 0;color:#9a9488;font-size:.75rem}.or:before,.or:after{content:'';height:1px;background:var(--line);flex:1}
+  input[type=file]{padding:8px;text-align:left}.selected{margin-top:8px;font-size:.78rem;color:#777166;word-break:break-word}
+  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.primary,.secondary{border-radius:4px;padding:9px 16px;cursor:pointer;font:0.86rem 'Helvetica Neue',Arial,sans-serif}.primary{border:0;background:var(--accent);color:#fff}.secondary{border:1px solid var(--line);background:#fff;color:#58544d}.primary:disabled,.secondary:disabled{opacity:.45;cursor:default}
+  #status{margin-top:12px;min-height:20px;font-size:.8rem;color:#817b70}
+  #result{display:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}.result-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.result-head h2{font:normal 1rem Georgia,serif;margin:0}.result-buttons{display:flex;gap:7px}
+  #transcript{min-height:210px;background:var(--accent-soft);font:1rem/1.65 Georgia,'Iowan Old Style',serif;margin-top:9px;resize:vertical}.meta{margin-top:8px;font-size:.77rem;color:#777166}.note{font-size:.75rem;line-height:1.45;color:#817b70;margin:12px 0 0}
+  @media(max-width:520px){.row{grid-template-columns:1fr}.result-head{align-items:flex-start;flex-direction:column}.actions>*{flex:1}}
+</style>
+</head>
+<body>
+<header>
+  <a href="../../">&larr; Generative AI Lab</a>
+  <h1>Speech-to-Text Transcriber</h1>
+  <p>Record speech or upload an audio file and turn it into an editable transcript.</p>
+</header>
+<main>
+  <div class="setup">
+    <label for="apiKey">Your free Groq API key</label>
+    <input id="apiKey" type="password" placeholder="Paste your key here — get one at console.groq.com/keys">
+    <div class="row">
+      <label for="language">Audio language
+        <select id="language"><option value="" selected>Auto-detect</option><option value="en">English</option><option value="ta">Tamil</option><option value="hi">Hindi</option><option value="te">Telugu</option><option value="ml">Malayalam</option><option value="kn">Kannada</option><option value="bn">Bengali</option><option value="ur">Urdu</option><option value="fr">French</option><option value="de">German</option><option value="es">Spanish</option><option value="ar">Arabic</option></select>
+      </label>
+      <label for="prompt">Helpful context (optional)
+        <input id="prompt" type="text" placeholder="Names or technical terms used in the audio">
+      </label>
+    </div>
+
+    <div class="source-card">
+      <button class="record" id="recordBtn" type="button" title="Start recording" aria-label="Start recording">●</button>
+      <div id="timer">00:00</div>
+      <div class="selected" id="recordingInfo">Tap to start recording</div>
+      <div class="or">OR</div>
+      <input id="audioFile" type="file" accept="audio/*,.mp3,.mp4,.mpeg,.mpga,.m4a,.ogg,.wav,.webm,.flac">
+      <div class="selected" id="fileInfo">Choose an audio file up to 25 MB</div>
+    </div>
+
+    <div class="actions"><button class="primary" id="transcribeBtn" type="button" disabled>Transcribe audio</button><button class="secondary" id="clearBtn" type="button">Clear</button></div>
+    <div id="status"></div>
+    <p class="note">The selected or recorded audio is sent to Groq only when you press Transcribe. Microphone recording requires browser permission and works on HTTPS sites such as GitHub Pages.</p>
+  </div>
+
+  <section id="result">
+    <div class="result-head"><h2>Editable transcript</h2><div class="result-buttons"><button class="secondary" id="copyBtn" type="button">Copy</button><button class="secondary" id="downloadBtn" type="button">Download .txt</button></div></div>
+    <textarea id="transcript" spellcheck="true"></textarea>
+    <div class="meta" id="meta"></div>
+  </section>
+</main>
+<script>
+const MAX_BYTES=25*1024*1024;
+const apiKeyInput=document.getElementById('apiKey');const language=document.getElementById('language');const promptInput=document.getElementById('prompt');const recordBtn=document.getElementById('recordBtn');const timer=document.getElementById('timer');const recordingInfo=document.getElementById('recordingInfo');const audioFile=document.getElementById('audioFile');const fileInfo=document.getElementById('fileInfo');const transcribeBtn=document.getElementById('transcribeBtn');const clearBtn=document.getElementById('clearBtn');const status=document.getElementById('status');const result=document.getElementById('result');const transcript=document.getElementById('transcript');const meta=document.getElementById('meta');const copyBtn=document.getElementById('copyBtn');const downloadBtn=document.getElementById('downloadBtn');
+apiKeyInput.value=localStorage.getItem('genai_lab_groq_key')||'';apiKeyInput.addEventListener('input',()=>localStorage.setItem('genai_lab_groq_key',apiKeyInput.value.trim()));
+let mediaRecorder=null;let stream=null;let chunks=[];let selectedAudio=null;let startedAt=0;let timerInterval=null;let speechModel=null;
+function formatTime(seconds){return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')}
+function setAudio(file,label){if(file.size>MAX_BYTES){status.textContent='This file is larger than the free-tier 25 MB limit.';selectedAudio=null;transcribeBtn.disabled=true;return}selectedAudio=file;transcribeBtn.disabled=false;fileInfo.textContent=label+' — '+(file.size/1024/1024).toFixed(2)+' MB';status.textContent=''}
+function preferredMime(){const choices=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'];return choices.find(type=>MediaRecorder.isTypeSupported(type))||''}
+async function startRecording(){
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent='Audio recording is not supported in this browser. Upload an audio file instead.';return}
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true});const mime=preferredMime();mediaRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);chunks=[];mediaRecorder.ondataavailable=event=>{if(event.data.size)chunks.push(event.data)};mediaRecorder.onstop=()=>{const type=mediaRecorder.mimeType||'audio/webm';const extension=type.includes('ogg')?'ogg':'webm';const blob=new Blob(chunks,{type});const file=new File([blob],'recording.'+extension,{type});setAudio(file,'Recorded audio');recordingInfo.textContent='Recording ready — '+formatTime(Math.floor((Date.now()-startedAt)/1000));stream.getTracks().forEach(track=>track.stop());stream=null};mediaRecorder.start();startedAt=Date.now();timer.textContent='00:00';timerInterval=setInterval(()=>timer.textContent=formatTime(Math.floor((Date.now()-startedAt)/1000)),1000);recordBtn.classList.add('recording');recordBtn.textContent='■';recordBtn.title='Stop recording';recordingInfo.textContent='Recording… tap again to stop';audioFile.value='';fileInfo.textContent='Choose an audio file up to 25 MB'}catch(error){status.textContent=error.name==='NotAllowedError'?'Microphone permission was denied. You can upload an audio file instead.':'Could not start recording: '+error.message}
+}
+function stopRecording(){if(mediaRecorder&&mediaRecorder.state==='recording')mediaRecorder.stop();clearInterval(timerInterval);recordBtn.classList.remove('recording');recordBtn.textContent='●';recordBtn.title='Start recording'}
+recordBtn.addEventListener('click',()=>{if(mediaRecorder&&mediaRecorder.state==='recording')stopRecording();else startRecording()});
+audioFile.addEventListener('change',()=>{const file=audioFile.files[0];if(!file)return;if(mediaRecorder&&mediaRecorder.state==='recording')stopRecording();setAudio(file,file.name);recordingInfo.textContent='Tap to start a new recording'});
+
+async function pickSpeechModel(apiKey){const res=await fetch('https://api.groq.com/openai/v1/models',{headers:{Authorization:`Bearer ${apiKey}`}});const data=await res.json();if(!res.ok)throw new Error(data.error?.message||'Could not fetch the model list.');const ids=(data.data||[]).map(model=>model.id);speechModel=['whisper-large-v3-turbo','whisper-large-v3'].find(model=>ids.includes(model));if(!speechModel)throw new Error('No speech-to-text model is currently available on this account.');return speechModel}
+async function transcribeAudio(apiKey,file,attempt=1){
+  if(!speechModel)await pickSpeechModel(apiKey);const form=new FormData();form.append('file',file,file.name);form.append('model',speechModel);form.append('response_format','verbose_json');if(language.value)form.append('language',language.value);if(promptInput.value.trim())form.append('prompt',promptInput.value.trim().slice(0,800));
+  const res=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:`Bearer ${apiKey}`},body:form});const data=await res.json();
+  if(data.error&&/does not exist|decommission|not found/i.test(data.error.message||'')&&attempt<3){speechModel=null;await pickSpeechModel(apiKey);return transcribeAudio(apiKey,file,attempt+1)}
+  if(data.error&&res.status===429&&attempt<3){const h=parseFloat(res.headers.get('retry-after'));const m=parseFloat((data.error.message||'').match(/try again in ([\d.]+)s/i)?.[1]);const wait=Math.min(Math.max(h||m||5,1)+1,60);status.textContent='Rate limit reached — retrying in '+Math.ceil(wait)+' seconds…';await new Promise(resolve=>setTimeout(resolve,wait*1000));return transcribeAudio(apiKey,file,attempt+1)}return data;
+}
+transcribeBtn.addEventListener('click',async()=>{const apiKey=apiKeyInput.value.trim();if(!apiKey){status.textContent='Add your free Groq API key first.';return}if(!selectedAudio)return;transcribeBtn.disabled=true;recordBtn.disabled=true;status.textContent='Transcribing…';result.style.display='none';try{const data=await transcribeAudio(apiKey,selectedAudio);if(data.error){status.textContent='Error: '+data.error.message;return}transcript.value=(data.text||'').trim();const parts=[];if(data.language)parts.push('Detected language: '+data.language);if(Number.isFinite(data.duration))parts.push('Audio duration: '+formatTime(Math.round(data.duration)));if(speechModel)parts.push('Model: '+speechModel);meta.textContent=parts.join(' · ');result.style.display='block';status.textContent=''}catch(error){status.textContent='Error: '+error.message}finally{transcribeBtn.disabled=false;recordBtn.disabled=false}});
+copyBtn.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(transcript.value);copyBtn.textContent='Copied';setTimeout(()=>copyBtn.textContent='Copy',1500)}catch(error){copyBtn.textContent='Could not copy'}});
+downloadBtn.addEventListener('click',()=>{const blob=new Blob([transcript.value],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='transcript.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+clearBtn.addEventListener('click',()=>{if(mediaRecorder&&mediaRecorder.state==='recording')stopRecording();selectedAudio=null;audioFile.value='';transcribeBtn.disabled=true;timer.textContent='00:00';recordingInfo.textContent='Tap to start recording';fileInfo.textContent='Choose an audio file up to 25 MB';transcript.value='';result.style.display='none';status.textContent=''});
+</script>
+</body>
+</html>

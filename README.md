@@ -29,7 +29,14 @@ genai-lab/
     ├── job-description-matcher/index.html
     ├── cover-letter-generator/index.html
     ├── blog-social-generator/index.html
-    └── grammar-writing-improver/index.html
+    ├── grammar-writing-improver/index.html
+    ├── language-translator/index.html
+    ├── voice-ai-assistant/index.html
+    ├── speech-to-text-transcriber/index.html
+    ├── ai-quiz-generator/index.html
+    ├── ai-interview-practice/index.html
+    ├── research-paper-summariser/index.html
+    └── document-qa-rag/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -145,3 +152,59 @@ Uses the same free Groq API key and automatic model selection as the other text 
 3. Optional explanations list the most important edits without cluttering the corrected text
 4. Paragraph and list formatting can be preserved, and names, facts, numbers, and meaning are explicitly protected
 5. Input is capped at 14,000 characters to stay within free-tier request limits
+
+### 12 — Language Translator
+Uses the same Groq key and automatic model selection. Choose the source and target languages, paste text, and receive a natural translation.
+1. Auto-detects the source language or lets the user specify it directly
+2. Includes 26 commonly used languages, including Tamil, Hindi, Telugu, Malayalam, Kannada, Bengali, Urdu, Arabic, and major international languages
+3. Provides a language-swap control and can move the latest translation back into the input for reverse translation
+4. Can preserve paragraphs and lists and optionally use a formal, respectful tone
+5. Protects names, numbers, facts, and meaning, with the same 14,000-character free-tier cap
+
+### 13 — Voice-Based AI Assistant
+Combines Groq chat with the browser's built-in speech recognition and speech synthesis. It needs no installed software or separate voice API.
+1. Tap the microphone, speak a question, and hear the AI answer aloud
+2. Supports English (India/US/UK), Tamil, Hindi, Telugu, Malayalam, and Kannada speech settings
+3. Keeps a short conversational history so follow-up questions retain context
+4. Includes brief, medium, and detailed answer modes, plus a typed-question fallback
+5. Voice recognition works best in Chrome or Edge and requires microphone permission; unsupported browsers can still use the typed chat
+
+### 14 — Speech-to-Text Transcriber
+Uses Groq's multilingual Whisper model to produce an editable transcript from recorded or uploaded audio.
+1. Records directly from the browser microphone or accepts FLAC, MP3, MP4, MPEG, MPGA, M4A, OGG, WAV, and WEBM files
+2. Automatically selects `whisper-large-v3-turbo`, with `whisper-large-v3` as a fallback if availability changes
+3. Can auto-detect the language or accept an ISO language hint for better accuracy and speed
+4. Allows names and technical terms to be supplied as optional transcription context
+5. Supports editing, copying, and downloading the transcript as a `.txt` file; audio is limited to 25 MB on Groq's free tier
+
+### 15 — AI Quiz Generator
+Uses Groq to create an interactive, automatically scored quiz from a topic or pasted study material.
+1. Generates 5, 10, or 15 questions at beginner, intermediate, or advanced difficulty
+2. Supports multiple-choice, true/false, or a balanced mixture of both
+3. Grades the user's selections in the browser and displays the score, correct answers, and teaching explanations
+4. Includes a retry option and downloads the questions plus answer key as a `.txt` file
+5. The prompt requires every question to remain grounded in the supplied material and rejects incomplete quiz structures before display
+
+### 16 — AI Interview Practice
+Conducts a structured mock interview for a chosen role and evaluates each answer separately.
+1. Supports technical, behavioural, or mixed interviews for entry, mid-level, and senior candidates
+2. Generates 5, 8, or 10 role-specific questions, optionally guided by a pasted job description
+3. Scores each response from 0 to 10 and gives a strength, an improvement point, and a stronger example answer
+4. Shows an average score and question-by-question improvement summary at the end
+5. Downloads a complete practice report containing all questions, answers, scores, and feedback
+
+### 17 — Research Paper Summariser
+Produces a structured, evidence-conscious analysis from an uploaded PDF/TXT paper or pasted text.
+1. Extracts PDF text entirely in the browser using pdf.js
+2. Covers the problem, novelty, methodology, experimental setup, results, comparisons, limitations, future work, and key terms
+3. Offers beginner, engineering-student, and researcher explanation levels plus selectable analysis focus
+4. For long papers, samples the beginning, middle, and ending so the conclusion is not lost to a simple first-character cutoff
+5. Explicitly marks missing information instead of inventing it and downloads the result as a Markdown file
+
+### 18 — Document Q&A System (Basic RAG)
+Demonstrates retrieval-augmented generation without a server or vector-database installation.
+1. Accepts multiple PDF and TXT files and extracts their text locally with pdf.js
+2. Splits documents into overlapping passages and builds a browser-side weighted keyword index
+3. Retrieves the five most relevant passages for each question, then sends only those passages to Groq
+4. Instructs the model to answer only from retrieved evidence, acknowledge insufficient evidence, and cite file/page/chunk labels
+5. Displays the retrieved passages under every answer so the user can inspect the grounding evidence
