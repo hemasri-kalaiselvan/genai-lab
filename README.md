@@ -36,7 +36,13 @@ genai-lab/
     ├── ai-quiz-generator/index.html
     ├── ai-interview-practice/index.html
     ├── research-paper-summariser/index.html
-    └── document-qa-rag/index.html
+    ├── document-qa-rag/index.html
+    ├── basic-ai-agent/index.html
+    ├── sentiment-feedback-analyser/index.html
+    ├── code-explainer-debugger/index.html
+    ├── prompt-comparison-tool/index.html
+    ├── small-model-fine-tuning/index.html
+    └── ai-output-evaluation-dashboard/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -208,3 +214,51 @@ Demonstrates retrieval-augmented generation without a server or vector-database 
 3. Retrieves the five most relevant passages for each question, then sends only those passages to Groq
 4. Instructs the model to answer only from retrieved evidence, acknowledge insufficient evidence, and cite file/page/chunk labels
 5. Displays the retrieved passages under every answer so the user can inspect the grounding evidence
+
+### 19 — Basic AI Agent
+Demonstrates a controlled plan-act-observe loop in which the model chooses browser tools and uses their returned results.
+1. Offers four safe tools: arithmetic calculator, local date/time, text statistics, and unit conversion
+2. Lets the model perform up to five tool actions before producing a final answer
+3. Uses a custom arithmetic parser instead of JavaScript `eval`, and validates unit categories before conversion
+4. Displays each tool request and observation while keeping hidden model reasoning private
+5. Runs entirely in the browser apart from Groq model calls and does not permit arbitrary code, web access, or file-system actions
+
+### 20 — Sentiment & Feedback Analyser
+Turns individual or batched feedback into validated classifications and practical summaries.
+1. Accepts pasted text or TXT/CSV uploads and separates items by line, paragraph, or as one combined entry
+2. Analyses up to 30 items per run as positive, neutral, negative, or mixed, with confidence and urgency labels
+3. Extracts up to three themes and a short neutral interpretation for every item
+4. Displays a sentiment-distribution dashboard, batch summary, recommended actions, and a detailed item table
+5. Exports item-level results to UTF-8 CSV and explicitly avoids demographic, personality, or mental-state inferences
+
+### 21 — Code Explainer & Debugger
+Analyses pasted code as text without executing it.
+1. Includes Explain, Debug, Review, and Optimise modes with beginner, intermediate, and advanced detail levels
+2. Supports automatic language detection plus Python, JavaScript, Java, C/C++, C#, MATLAB, HTML/CSS, SQL, PHP, R, and Verilog/VHDL
+3. Debug mode accepts the exact error message and expected behaviour, separates confirmed faults from hypotheses, and proposes verification steps
+4. Review and optimisation modes cover correctness, security, edge cases, maintainability, performance, and trade-offs without inventing defects
+5. Sanitises rendered Markdown, warns users to remove secrets, and exports the result as a Markdown file
+
+### 22 — Prompt Comparison Tool
+Runs two prompt variants against one shared input using the same selected Groq model.
+1. Supports `{{input}}` placeholders and appends the shared input automatically when no placeholder is present
+2. Displays both outputs side by side with measured client-side latency and API token usage when returned
+3. Evaluates relevance, clarity, completeness, factual accuracy, and format compliance using selectable criteria
+4. Randomly presents outputs as X and Y to the evaluator to reduce prompt-label bias, then maps the scores back to A and B
+5. States that AI judging is not an objective benchmark and exports the full comparison as JSON
+
+### 23 — Small Model Fine-Tuning Experiment
+Keeps the portfolio's no-local-install promise by preparing data in the browser and running training in Google Colab.
+1. Builds or imports instruction/input/output examples and validates every JSONL row
+2. Creates a deterministic 80/20 train-validation split in TRL's conversational prompt-completion format
+3. Downloads `train.jsonl`, `validation.jsonl`, and a ready-to-run Colab notebook
+4. Fine-tunes `HuggingFaceTB/SmolLM2-135M-Instruct` using TRL SFTTrainer and a PEFT LoRA adapter, then evaluates, tests, saves, and downloads the adapter
+5. Warns about dataset size, accuracy, privacy, licensing, bias, memorisation, and the fact that free Colab GPU availability is not guaranteed
+
+### 24 — AI Output Evaluation Dashboard
+Evaluates and ranks two to six candidate outputs against one task and optional reference answer.
+1. Accepts manually pasted candidates or imports outputs from Project 22's JSON comparison report
+2. Scores selectable criteria: relevance, accuracy, completeness, clarity, conciseness, and instruction following
+3. Randomises candidates behind anonymous IDs before evaluation and restores their original labels afterward
+4. Shows an overall ranking, per-criterion score table, and strengths/weaknesses cards
+5. Exports both UTF-8 CSV and complete JSON reports and states that AI scoring must be supplemented by human judgement

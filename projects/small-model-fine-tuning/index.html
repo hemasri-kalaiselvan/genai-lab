@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Small-Model Fine-Tuning — Generative AI Lab</title>
+<style>
+:root{--ink:#1b1a17;--paper:#f6f4ee;--line:#d8d3c7;--accent:#665237;--soft:#f0ebe3;--amber:#b8752c}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:'Helvetica Neue',Arial,sans-serif}header,main{max-width:1000px;margin:auto}header{padding:28px 20px 14px;border-bottom:1px solid var(--line)}header a{font-size:.78rem;color:var(--amber);text-decoration:none}h1{font:normal 1.6rem Georgia,serif;margin:10px 0 0}header p{font-size:.9rem;line-height:1.5;color:#6b675e;margin:6px 0 0}main{padding:20px}.intro{background:var(--soft);padding:13px 15px;border-radius:5px;font-size:.83rem;line-height:1.5}.builder{margin-top:16px}.builder label{display:block;margin-top:11px;font-size:.85rem;color:#676258}input,textarea{width:100%;margin-top:6px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);font:inherit}textarea{resize:vertical;min-height:72px;line-height:1.45}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.primary,.secondary,.danger{border-radius:4px;padding:9px 14px;cursor:pointer;font:0.83rem 'Helvetica Neue',Arial,sans-serif}.primary{border:0;background:var(--accent);color:#fff}.secondary{border:1px solid var(--line);background:#fff;color:#58544d}.danger{border:1px solid #c9aaa5;background:#fff;color:#9a3f35}.primary:disabled,.secondary:disabled{opacity:.45;cursor:default}.status{margin-top:10px;font-size:.8rem;color:#7e786e}.dataset{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}.dataset-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.dataset h2{font:normal 1.1rem Georgia,serif;margin:0}.count{font-family:'Courier New',monospace;font-size:.78rem}.table-wrap{overflow:auto;margin-top:10px}table{width:100%;border-collapse:collapse;background:#fff;font-size:.78rem}th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}th{background:#efede7}.wide{min-width:220px;max-width:340px;white-space:pre-wrap}.remove{border:0;background:none;color:#a13f36;cursor:pointer}.export{margin-top:17px;padding:15px;border:1px solid var(--line);background:#fff;border-radius:5px}.export h3{font:normal 1rem Georgia,serif;margin:0 0 8px}.export p{font-size:.8rem;line-height:1.5;color:#6c675e}.warning{color:#9a4a34;font-weight:600}.note{font-size:.74rem;line-height:1.45;color:#817b70;margin:11px 0 0}@media(max-width:650px){.row{grid-template-columns:1fr}.dataset-head{align-items:flex-start;flex-direction:column}.actions>*{flex:1}}
+</style></head><body>
+<header><a href="../../">&larr; Generative AI Lab</a><h1>Small-Model Fine-Tuning Experiment</h1><p>Build a clean instruction dataset in the browser, then download a Google Colab notebook for LoRA fine-tuning.</p></header>
+<main><div class="intro"><strong>Browser-only workflow:</strong> this page prepares the data and notebook. Training runs in Google Colab—not on your laptop. The notebook uses the 135M-parameter SmolLM2 instruction model with Hugging Face TRL and PEFT/LoRA. Free Colab GPU availability is not guaranteed.</div>
+<section class="builder">
+  <div class="row"><label for="instruction">Instruction<textarea id="instruction" placeholder="Example: Explain Ohm's law in simple terms."></textarea></label><label for="input">Additional input (optional)<textarea id="input" placeholder="Example: Use a 10 V source and 5 ohm resistor."></textarea></label></div>
+  <label for="output">Desired answer<textarea id="output" placeholder="Write the high-quality answer you want the model to learn..."></textarea></label>
+  <div class="actions"><button class="primary" id="addBtn" disabled>Add example</button><button class="secondary" id="sampleBtn">Load sample data</button><label class="secondary" style="margin:0">Import JSONL<input id="importFile" type="file" accept=".jsonl,.txt,application/json" style="display:none"></label><button class="danger" id="clearBtn">Clear dataset</button></div><div class="status" id="status"></div>
+</section>
+<section class="dataset"><div class="dataset-head"><h2>Instruction dataset</h2><span class="count" id="count">0 examples</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Instruction</th><th>Input</th><th>Desired answer</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="export"><h3>Export experiment</h3><p id="quality">Add examples to begin. For a meaningful experiment, use at least 20 diverse, accurate examples; larger high-quality datasets are better.</p><div class="actions"><button class="secondary" id="trainBtn" disabled>Download train.jsonl</button><button class="secondary" id="validBtn" disabled>Download validation.jsonl</button><button class="primary" id="notebookBtn" disabled>Download Colab notebook</button></div><p class="note">Run the notebook in Google Colab after uploading the two JSONL files. Fine-tuning can reinforce errors, bias, private data, or copyrighted material present in the dataset. Use only data you are permitted to process and evaluate the adapted model before deployment.</p></div></section>
+<script>
+const instruction=document.getElementById('instruction'),input=document.getElementById('input'),output=document.getElementById('output'),addBtn=document.getElementById('addBtn'),sampleBtn=document.getElementById('sampleBtn'),importFile=document.getElementById('importFile'),clearBtn=document.getElementById('clearBtn'),status=document.getElementById('status'),count=document.getElementById('count'),rows=document.getElementById('rows'),quality=document.getElementById('quality'),trainBtn=document.getElementById('trainBtn'),validBtn=document.getElementById('validBtn'),notebookBtn=document.getElementById('notebookBtn');let examples=[];
+function ready(){addBtn.disabled=!(instruction.value.trim()&&output.value.trim())}[instruction,output].forEach(item=>item.addEventListener('input',ready));
+function validateExample(item,index=''){if(!item||typeof item.instruction!=='string'||typeof item.output!=='string'||!item.instruction.trim()||!item.output.trim())throw new Error('Invalid example '+index+': instruction and output are required.');return{instruction:item.instruction.trim(),input:String(item.input||'').trim(),output:item.output.trim()}}
+function render(){rows.replaceChildren();examples.forEach((item,index)=>{const tr=document.createElement('tr');[String(index+1),item.instruction,item.input||'—',item.output].forEach((value,col)=>{const td=document.createElement('td');if(col>0)td.className='wide';td.textContent=value;tr.appendChild(td)});const td=document.createElement('td'),button=document.createElement('button');button.className='remove';button.textContent='Remove';button.addEventListener('click',()=>{examples.splice(index,1);render()});td.appendChild(button);tr.appendChild(td);rows.appendChild(tr)});count.textContent=examples.length+' example'+(examples.length===1?'':'s');const enabled=examples.length>=2;trainBtn.disabled=!enabled;validBtn.disabled=!enabled;notebookBtn.disabled=!enabled;if(!examples.length)quality.textContent='Add examples to begin. For a meaningful experiment, use at least 20 diverse, accurate examples; larger high-quality datasets are better.';else if(examples.length<10)quality.innerHTML='<span class="warning">Very small demonstration dataset.</span> The notebook will run, but '+examples.length+' examples are not enough to expect reliable learning.';else if(examples.length<20)quality.innerHTML='<span class="warning">Small experimental dataset.</span> Add more diverse examples before drawing conclusions.';else quality.textContent='Dataset ready for an initial experiment. Manually review correctness, diversity, duplication, privacy, and licensing before training.'}
+addBtn.addEventListener('click',()=>{try{examples.push(validateExample({instruction:instruction.value,input:input.value,output:output.value}));instruction.value='';input.value='';output.value='';addBtn.disabled=true;status.textContent='Example added.';render()}catch(error){status.textContent=error.message}});
+sampleBtn.addEventListener('click',()=>{examples=[{instruction:'Explain Ohm\'s law in simple terms.',input:'Use a 10 V source and a 5 ohm resistor.',output:'Ohm\'s law states that voltage equals current multiplied by resistance: V = IR. With 10 V across 5 Ω, the current is I = V/R = 10/5 = 2 A.'},{instruction:'Define Kirchhoff\'s current law.',input:'',output:'Kirchhoff\'s current law states that the algebraic sum of currents at a node is zero. Equivalently, total current entering a node equals total current leaving it.'},{instruction:'What is the SI unit of capacitance?',input:'',output:'The SI unit of capacitance is the farad, symbol F.'},{instruction:'Differentiate a series circuit from a parallel circuit.',input:'',output:'A series circuit has one current path, so the same current flows through every component. A parallel circuit has multiple branches, so each branch has the same voltage while current divides among branches.'},{instruction:'Calculate electrical power.',input:'A device operates at 12 V and draws 2 A.',output:'Electrical power is P = VI. Therefore, P = 12 × 2 = 24 W.'}];status.textContent='Loaded five demonstration examples. Add more before serious training.';render()});
+importFile.addEventListener('change',async()=>{const file=importFile.files[0];if(!file)return;try{const lines=(await file.text()).split(/\r?\n/).filter(line=>line.trim()),imported=lines.map((line,index)=>validateExample(JSON.parse(line),index+1));examples.push(...imported);status.textContent='Imported '+imported.length+' examples.';render()}catch(error){status.textContent='Import failed: '+error.message}finally{importFile.value=''}});
+function shuffledSplit(){const copy=examples.map(item=>({...item}));let seed=20260926;function random(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}for(let i=copy.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]]}const validationCount=Math.max(1,Math.round(copy.length*.2));return{validation:copy.slice(0,validationCount),train:copy.slice(validationCount)}}
+function conversational(item){const content=item.input?item.instruction+'\n\nInput:\n'+item.input:item.instruction;return{prompt:[{role:'user',content}],completion:[{role:'assistant',content:item.output}]}}
+function download(name,content,type='application/json'){const blob=new Blob([content],{type:type+';charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function jsonl(items){return items.map(item=>JSON.stringify(conversational(item))).join('\n')+'\n'}
+trainBtn.addEventListener('click',()=>download('train.jsonl',jsonl(shuffledSplit().train),'application/x-ndjson'));validBtn.addEventListener('click',()=>download('validation.jsonl',jsonl(shuffledSplit().validation),'application/x-ndjson'));
+/* Legacy notebook template disabled.
+function notebook(){const cells=[];const md=text=>cells.push({cell_type:'markdown',metadata:{},source:text.split('\n').map(line=>line+'\n')});const codeCell=text=>cells.push({cell_type:'code',execution_count:null,metadata:{},outputs:[],source:text.split('\n').map(line=>line+'\n')});md('# SmolLM2-135M LoRA fine-tuning experiment\nGenerated by Generative AI Lab. Use **Runtime → Change runtime type → GPU** when a free GPU is available. This is an educational experiment; review your data and evaluate the model carefully.');codeCell('!pip -q install -U transformers datasets accelerate peft trl');codeCell("import torch\nfrom google.colab import files\nprint('GPU available:', torch.cuda.is_available())\nif not torch.cuda.is_available():\n    print('A CPU run is possible for this tiny model but may be slow. For best results, select a GPU runtime.')\nprint('Upload train.jsonl and validation.jsonl generated by the web app.')\nuploaded = files.upload()");codeCell("from datasets import load_dataset\nfiles_map = {'train': 'train.jsonl', 'validation': 'validation.jsonl'}\ndataset = load_dataset('json', data_files=files_map)\nprint(dataset)\nprint(dataset['train'][0])");codeCell("from peft import LoraConfig\nfrom trl import SFTConfig, SFTTrainer\n\nMODEL_ID = 'HuggingFaceTB/SmolLM2-135M-Instruct'\nOUTPUT_DIR = 'smollm2-135m-lora-adapter'\n\npeft_config = LoraConfig(\n    r=8,\n    lora_alpha=16,\n    lora_dropout=0.05,\n    bias='none',\n    task_type='CAUSAL_LM',\n)\n\ntraining_args = SFTConfig(\n    output_dir=OUTPUT_DIR,\n    num_train_epochs=3,\n    per_device_train_batch_size=4,\n    per_device_eval_batch_size=4,\n    gradient_accumulation_steps=4,\n    learning_rate=1e-4,\n    logging_steps=5,\n    eval_strategy='epoch',\n    save_strategy='epoch',\n    max_length=512,\n    report_to='none',\n    seed=42,\n)\n\ntrainer = SFTTrainer(\n    model=MODEL_ID,\n    args=training_args,\n    train_dataset=dataset['train'],\n    eval_dataset=dataset['validation'],\n    peft_config=peft_config,\n)\ntrainer.model.print_trainable_parameters()");codeCell("train_result = trainer.train()\nprint(train_result)\nprint(trainer.evaluate())\ntrainer.save_model(OUTPUT_DIR)
+print('Adapter saved to', OUTPUT_DIR)");codeCell("from transformers import AutoTokenizer\n\ntokenizer = AutoTokenizer.from_pretrained(MODEL_ID)\nmodel = trainer.model.eval()\nprompt = 'Explain Ohm\\'s law in simple terms.'\nmessages = [{'role': 'user', 'content': prompt}]\ntext = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)\ninputs = tokenizer(text, return_tensors='pt').to(model.device)\nwith torch.no_grad():\n    generated = model.generate(**inputs, max_new_tokens=120, do_sample=False)\nnew_tokens = generated[0][inputs['input_ids'].shape[1]:]\nprint(tokenizer.decode(new_tokens, skip_special_tokens=True))");codeCell("import shutil\nshutil.make_archive(OUTPUT_DIR, 'zip', OUTPUT_DIR)\nfiles.download(OUTPUT_DIR + '.zip')");md('## What to evaluate\nCompare the base model and adapted model on held-out prompts. Check correctness, unwanted memorisation, robustness to new wording, bias, and regression on general tasks. A falling training loss alone does not prove that the model improved.');return{nbformat:4,nbformat_minor:5,metadata:{kernelspec:{display_name:'Python 3',language:'python',name:'python3'},language_info:{name:'python'}},cells}}
+*/
+function notebook(){
+  const cells=[];
+  const lines=text=>text.replace(/^\n|\n$/g,'').split('\n').map(line=>line+'\n');
+  const md=text=>cells.push({cell_type:'markdown',metadata:{},source:lines(text)});
+  const codeCell=text=>cells.push({cell_type:'code',execution_count:null,metadata:{},outputs:[],source:lines(text)});
+  md(`# SmolLM2-135M LoRA fine-tuning experiment
+Generated by Generative AI Lab. Use **Runtime → Change runtime type → GPU** when a free GPU is available. This is an educational experiment; review your data and evaluate the model carefully.`);
+  codeCell(`!pip -q install -U transformers datasets accelerate peft trl`);
+  codeCell(`import torch
+from google.colab import files
+print('GPU available:', torch.cuda.is_available())
+if not torch.cuda.is_available():
+    print('A CPU run is possible for this tiny model but may be slow. For best results, select a GPU runtime.')
+print('Upload train.jsonl and validation.jsonl generated by the web app.')
+uploaded = files.upload()`);
+  codeCell(`from datasets import load_dataset
+files_map = {'train': 'train.jsonl', 'validation': 'validation.jsonl'}
+dataset = load_dataset('json', data_files=files_map)
+print(dataset)
+print(dataset['train'][0])`);
+  codeCell(`from peft import LoraConfig
+from trl import SFTConfig, SFTTrainer
+
+MODEL_ID = 'HuggingFaceTB/SmolLM2-135M-Instruct'
+OUTPUT_DIR = 'smollm2-135m-lora-adapter'
+peft_config = LoraConfig(r=8, lora_alpha=16, lora_dropout=0.05, bias='none', task_type='CAUSAL_LM')
+training_args = SFTConfig(
+    output_dir=OUTPUT_DIR,
+    num_train_epochs=3,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
+    gradient_accumulation_steps=4,
+    learning_rate=1e-4,
+    logging_steps=5,
+    eval_strategy='epoch',
+    save_strategy='epoch',
+    max_length=512,
+    report_to='none',
+    seed=42,
+)
+trainer = SFTTrainer(
+    model=MODEL_ID,
+    args=training_args,
+    train_dataset=dataset['train'],
+    eval_dataset=dataset['validation'],
+    peft_config=peft_config,
+)
+trainer.model.print_trainable_parameters()`);
+  codeCell(`train_result = trainer.train()
+print(train_result)
+print(trainer.evaluate())
+trainer.save_model(OUTPUT_DIR)
+print('Adapter saved to', OUTPUT_DIR)`);
+  codeCell(`from transformers import AutoTokenizer
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+model = trainer.model.eval()
+prompt = "Explain Ohm's law in simple terms."
+messages = [{'role': 'user', 'content': prompt}]
+text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+inputs = tokenizer(text, return_tensors='pt').to(model.device)
+with torch.no_grad():
+    generated = model.generate(**inputs, max_new_tokens=120, do_sample=False)
+new_tokens = generated[0][inputs['input_ids'].shape[1]:]
+print(tokenizer.decode(new_tokens, skip_special_tokens=True))`);
+  codeCell(`import shutil
+shutil.make_archive(OUTPUT_DIR, 'zip', OUTPUT_DIR)
+files.download(OUTPUT_DIR + '.zip')`);
+  md(`## What to evaluate
+Compare the base model and adapted model on held-out prompts. Check correctness, unwanted memorisation, robustness to new wording, bias, and regression on general tasks. A falling training loss alone does not prove that the model improved.`);
+  return {nbformat:4,nbformat_minor:5,metadata:{kernelspec:{display_name:'Python 3',language:'python',name:'python3'},language_info:{name:'python'}},cells};
+}
+notebookBtn.addEventListener('click',()=>download('smollm2_lora_finetuning_colab.ipynb',JSON.stringify(notebook(),null,2)));clearBtn.addEventListener('click',()=>{examples=[];status.textContent='Dataset cleared.';render()});render();
+</script></body></html>
