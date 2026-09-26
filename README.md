@@ -28,7 +28,8 @@ genai-lab/
     ├── text-to-image-generator/index.html
     ├── resume-analyser/index.html
     ├── job-description-matcher/index.html
-    └── cover-letter-generator/index.html
+    ├── cover-letter-generator/index.html
+    └── blog-social-generator/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -64,7 +65,6 @@ That's the link for your portfolio. It works on mobile and desktop — the layou
 - Worked through real, provider-specific problems: automatic model selection so tools keep working when Groq retires or renames a model; client-side rate-limit handling that reads Groq's own retry hints; and reading Pollinations'  live model list instead of hardcoding names
 
 ---
-
 ## Project setup notes
 
 ### 01 — Echo (chatbot)
@@ -130,3 +130,10 @@ Same Groq engine, resume input (upload or paste), and job description paste as t
 3. Three tone options: Warm & enthusiastic, Formal & traditional, Concise & direct
 4. The model is explicitly instructed to use only real resume content — it will not invent or exaggerate experience to better fit the job
 5. Same ~9,000-character-per-document cap as the Job Description Matcher, since two documents share one request
+
+### 10 — Blog & Social Content Generator
+Same Groq engine again. Give it a topic or rough outline, pick a format, and get a draft.
+1. Same Groq key works here too
+2. Four formats, each with format-appropriate output rules: Blog post (markdown, ~500-700 words, headings), LinkedIn post (~100-200 words, hook-first, hashtags), X/Twitter thread (5-8 numbered tweets, each under 280 characters), Instagram caption (~60-150 words, light emoji use, hashtags)
+3. Tone options (Professional, Casual, Witty, Authoritative) and an optional audience field to sharpen the draft
+4. The model is told not to invent statistics, quotes, or specific claims beyond what's in the topic/outline you gave it
