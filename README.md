@@ -7,7 +7,6 @@
 **AI Tools:** Claude, Groq, Pollinations.ai
 
 ## About
-
 A personal portal of small, working generative-AI tools — each one a standalone project, linked from a single landing page. Deployed as a static site with GitHub Pages. No install, no build step, no cost.
 
 **GitHub repository name:** `genai-lab`
@@ -29,7 +28,8 @@ genai-lab/
     ├── resume-analyser/index.html
     ├── job-description-matcher/index.html
     ├── cover-letter-generator/index.html
-    └── blog-social-generator/index.html
+    ├── blog-social-generator/index.html
+    └── grammar-writing-improver/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -137,3 +137,11 @@ Same Groq engine again. Give it a topic or rough outline, pick a format, and get
 2. Four formats, each with format-appropriate output rules: Blog post (markdown, ~500-700 words, headings), LinkedIn post (~100-200 words, hook-first, hashtags), X/Twitter thread (5-8 numbered tweets, each under 280 characters), Instagram caption (~60-150 words, light emoji use, hashtags)
 3. Tone options (Professional, Casual, Witty, Authoritative) and an optional audience field to sharpen the draft
 4. The model is told not to invent statistics, quotes, or specific claims beyond what's in the topic/outline you gave it
+
+### 11 — Grammar & Writing Improver
+Uses the same free Groq API key and automatic model selection as the other text tools. Paste any passage, choose how strongly it should be edited, and get a corrected version ready to copy.
+1. Three editing levels: grammar only, grammar plus clarity, or a polished rewrite
+2. Six tone choices, including preserving the original tone, professional, academic, friendly, concise, and persuasive
+3. Optional explanations list the most important edits without cluttering the corrected text
+4. Paragraph and list formatting can be preserved, and names, facts, numbers, and meaning are explicitly protected
+5. Input is capped at 14,000 characters to stay within free-tier request limits

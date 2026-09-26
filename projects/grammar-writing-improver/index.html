@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grammar &amp; Writing Improver — Generative AI Lab</title>
+<style>
+  :root{--ink:#1b1a17;--paper:#f7f5f0;--line:#d8d3c7;--accent:#405b73;--accent-soft:#e8eef3;--amber:#b8752c;}
+  *{box-sizing:border-box;} html,body{height:100%;}
+  body{margin:0;font-family:Georgia,'Iowan Old Style',serif;background:var(--paper);color:var(--ink);display:flex;flex-direction:column;align-items:center;}
+  header{width:100%;max-width:900px;padding:28px 20px 14px;border-bottom:1px solid var(--line);}
+  header a{font-family:'Helvetica Neue',Arial,sans-serif;font-size:.78rem;color:var(--amber);text-decoration:none;}
+  header h1{margin:10px 0 0;font-size:1.6rem;font-weight:normal;}
+  header p{margin:6px 0 0;font:0.9rem/1.5 'Helvetica Neue',Arial,sans-serif;color:#6b675e;}
+  main{width:100%;max-width:900px;flex:1;padding:20px;}
+  #setup{font:0.88rem 'Helvetica Neue',Arial,sans-serif;color:#6b675e;}
+  label{display:block;margin-top:12px;}
+  input,select,textarea{width:100%;margin-top:6px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);font:inherit;}
+  textarea{min-height:190px;padding:12px;resize:vertical;font-size:.95rem;line-height:1.55;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+  .checks{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;}
+  .checks label{display:flex;align-items:center;gap:6px;margin:0;color:#57544d;}
+  .checks input{width:auto;margin:0;}
+  button.primary{font:0.9rem 'Helvetica Neue',Arial,sans-serif;background:var(--accent);color:#fff;border:0;padding:10px 22px;border-radius:3px;cursor:pointer;margin-top:18px;}
+  button.primary:disabled{opacity:.5;cursor:default;}
+  #status{margin-top:14px;font:0.82rem 'Helvetica Neue',Arial,sans-serif;color:#8a8578;}
+  #result{display:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+  .result-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;}
+  .result-head h2{font-size:1rem;font-weight:normal;margin:0;}
+  #resultBox{background:var(--accent-soft);padding:18px 20px;border-radius:4px;line-height:1.65;white-space:pre-wrap;}
+  #notes{display:none;margin-top:14px;padding:14px 18px;border:1px solid var(--line);border-radius:4px;line-height:1.55;}
+  #notes h3{font-size:.95rem;margin:0 0 8px;}
+  #notes ul{margin:0;padding-left:20px;}
+  .copy-btn{font:0.75rem 'Helvetica Neue',Arial,sans-serif;color:var(--accent);background:none;border:1px solid var(--line);border-radius:3px;padding:4px 10px;cursor:pointer;}
+  .copy-btn.copied{color:#3f6b4f;border-color:#3f6b4f;}
+  @media(max-width:520px){.row{grid-template-columns:1fr;} textarea{min-height:160px;}}
+</style>
+</head>
+<body>
+<header>
+  <a href="../../">&larr; Generative AI Lab</a>
+  <h1>Grammar &amp; Writing Improver</h1>
+  <p>Correct grammar, improve clarity, and adjust the tone while preserving the original meaning.</p>
+</header>
+<main>
+  <div id="setup">
+    <label for="apiKey">Your free Groq API key</label>
+    <input id="apiKey" type="password" placeholder="Paste your key here — get one at console.groq.com/keys">
+
+    <label for="inputText">Text to improve</label>
+    <textarea id="inputText" placeholder="Paste an email, paragraph, report section, or social post here..."></textarea>
+
+    <div class="row">
+      <div>
+        <label for="mode">Improvement level</label>
+        <select id="mode">
+          <option value="Correct grammar, spelling, punctuation, and obvious usage errors only. Keep wording and sentence structure as close to the original as possible.">Grammar only</option>
+          <option value="Correct errors and improve clarity, flow, and conciseness without changing the meaning." selected>Grammar + clarity</option>
+          <option value="Rewrite more freely for polished, natural, professional writing while preserving every fact and the original meaning.">Polished rewrite</option>
+        </select>
+      </div>
+      <div>
+        <label for="tone">Target tone</label>
+        <select id="tone">
+          <option value="preserve the original tone" selected>Keep original tone</option>
+          <option value="professional and courteous">Professional</option>
+          <option value="formal and academic">Formal / academic</option>
+          <option value="friendly and conversational">Friendly</option>
+          <option value="concise and direct">Concise</option>
+          <option value="confident and persuasive">Persuasive</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="checks">
+      <label><input id="explainChanges" type="checkbox" checked> Explain important changes</label>
+      <label><input id="keepFormatting" type="checkbox" checked> Preserve paragraphs and lists</label>
+    </div>
+
+    <button class="primary" id="improveBtn" disabled>Improve writing</button>
+    <div id="status"></div>
+  </div>
+
+  <section id="result">
+    <div class="result-head"><h2>Improved text</h2><button class="copy-btn" id="copyBtn" type="button">Copy</button></div>
+    <div id="resultBox"></div>
+    <div id="notes"><h3>What changed</h3><ul id="notesList"></ul></div>
+  </section>
+</main>
+
+<script>
+const apiKeyInput=document.getElementById('apiKey');
+const inputText=document.getElementById('inputText');
+const mode=document.getElementById('mode');
+const tone=document.getElementById('tone');
+const explainChanges=document.getElementById('explainChanges');
+const keepFormatting=document.getElementById('keepFormatting');
+const improveBtn=document.getElementById('improveBtn');
+const status=document.getElementById('status');
+const result=document.getElementById('result');
+const resultBox=document.getElementById('resultBox');
+const notes=document.getElementById('notes');
+const notesList=document.getElementById('notesList');
+const copyBtn=document.getElementById('copyBtn');
+
+apiKeyInput.value=localStorage.getItem('genai_lab_groq_key')||'';
+apiKeyInput.addEventListener('input',()=>localStorage.setItem('genai_lab_groq_key',apiKeyInput.value.trim()));
+inputText.addEventListener('input',()=>{improveBtn.disabled=inputText.value.trim().length===0;});
+
+const MODEL_PREFERENCE=['llama-3.1-8b-instant','moonshotai/kimi-k2-instruct','llama-3.3-70b-versatile','openai/gpt-oss-120b','openai/gpt-oss-20b','qwen/qwen3.6-27b'];
+const NON_CHAT_MODEL=/whisper|tts|guard|prompt-guard/i;
+let currentModel=sessionStorage.getItem('genai_lab_groq_model')||null;
+
+async function pickModel(apiKey){
+  const res=await fetch('https://api.groq.com/openai/v1/models',{headers:{Authorization:`Bearer ${apiKey}`}});
+  const data=await res.json();
+  if(!res.ok)throw new Error(data.error?.message||'Could not fetch the model list.');
+  const available=(data.data||[]).map(m=>m.id).filter(id=>!NON_CHAT_MODEL.test(id));
+  const chosen=MODEL_PREFERENCE.find(m=>available.includes(m))||available[0];
+  if(!chosen)throw new Error('No chat models are available on this Groq account.');
+  currentModel=chosen;sessionStorage.setItem('genai_lab_groq_model',chosen);return chosen;
+}
+
+async function callGroq(apiKey,messages,attempt=1){
+  if(!currentModel){const chosen=await pickModel(apiKey);status.textContent='Using model: '+chosen;}
+  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${apiKey}`},body:JSON.stringify({model:currentModel,messages,response_format:{type:'json_object'}})});
+  const data=await res.json();
+  const modelGone=data.error&&/does not exist|decommission|not found/i.test(data.error.message||'');
+  if(modelGone&&attempt<3){currentModel=null;sessionStorage.removeItem('genai_lab_groq_model');await pickModel(apiKey);return callGroq(apiKey,messages,attempt+1);}
+  if(data.error&&res.status===429&&attempt<3){
+    const headerWait=parseFloat(res.headers.get('retry-after'));
+    const messageWait=parseFloat((data.error.message||'').match(/try again in ([\d.]+)s/i)?.[1]);
+    const wait=Math.min(Math.max(headerWait||messageWait||5,1)+1,60);
+    status.textContent='Rate limit reached — waiting '+Math.ceil(wait)+'s before retrying…';
+    await new Promise(r=>setTimeout(r,wait*1000));return callGroq(apiKey,messages,attempt+1);
+  }
+  if(data.error&&res.status>=500&&attempt<3){await new Promise(r=>setTimeout(r,attempt*1000));return callGroq(apiKey,messages,attempt+1);}
+  return data;
+}
+
+improveBtn.addEventListener('click',async()=>{
+  const apiKey=apiKeyInput.value.trim();
+  if(!apiKey){status.textContent='Add your free Groq API key above first.';return;}
+  const original=inputText.value.trim();if(!original)return;
+  improveBtn.disabled=true;result.style.display='none';status.textContent='Improving your text…';
+  const messages=[
+    {role:'system',content:'You are a careful writing editor. Preserve the writer’s facts, names, numbers, intent, and language unless translation is explicitly requested. Never invent information. Return only valid JSON with this shape: {"improved_text":"...","changes":["..."]}. The changes array must contain at most five short explanations and may be empty.'},
+    {role:'user',content:mode.value+' Use a '+tone.value+' tone. '+(keepFormatting.checked?'Preserve the paragraph breaks and list structure.':'You may reorganize formatting when it improves readability.')+' '+(explainChanges.checked?'Briefly explain only the most important changes.':'Return an empty changes array.')+'\n\nTEXT TO EDIT:\n'+original.slice(0,14000)}
+  ];
+  try{
+    const data=await callGroq(apiKey,messages);
+    if(data.error){status.textContent='Error: '+data.error.message;return;}
+    const raw=data.choices?.[0]?.message?.content?.trim()||'';
+    let parsed;try{parsed=JSON.parse(raw);}catch(e){throw new Error('The AI returned an unexpected format. Please try again.');}
+    resultBox.textContent=parsed.improved_text||original;
+    copyBtn.dataset.raw=parsed.improved_text||original;
+    notesList.replaceChildren();
+    const changes=Array.isArray(parsed.changes)?parsed.changes.slice(0,5):[];
+    changes.forEach(change=>{const li=document.createElement('li');li.textContent=change;notesList.appendChild(li);});
+    notes.style.display=explainChanges.checked&&changes.length?'block':'none';
+    result.style.display='block';status.textContent=original.length>14000?'Only the first 14,000 characters were processed to stay within the free limit.':'';
+  }catch(err){status.textContent='Error: '+err.message;}
+  finally{improveBtn.disabled=false;}
+});
+
+copyBtn.addEventListener('click',async()=>{
+  try{await navigator.clipboard.writeText(copyBtn.dataset.raw||'');copyBtn.textContent='Copied';copyBtn.classList.add('copied');setTimeout(()=>{copyBtn.textContent='Copy';copyBtn.classList.remove('copied');},1500);}
+  catch(err){copyBtn.textContent='Could not copy';}
+});
+</script>
+</body>
+</html>
