@@ -80,7 +80,7 @@ That's the link for your portfolio. It works on mobile and desktop — the layou
 
 ## AI Tools and Technologies Used
 
-This repository contains 24 browser-based generative-AI projects. Most projects use free or open-source AI services and run without a dedicated backend.
+This repository contains browser-based generative-AI projects, added one at a time. Most projects use free or open-source AI services and run without a dedicated backend.
 
 ### Core AI tools
 
@@ -137,6 +137,7 @@ This automatic selection helps the projects continue working when a model is ren
 | 22 | Prompt Comparison Tool | Groq API, blinded output evaluation |
 | 23 | Small-Model Fine-Tuning | SmolLM2, Google Colab, Transformers, Datasets, TRL, PEFT, and LoRA |
 | 24 | AI Output Evaluation Dashboard | Groq API, anonymized AI judging |
+| 25 | Prompt Bank | Groq API (optional, per-prompt) |
 
 ### Supporting web technologies
 
@@ -348,7 +349,7 @@ Evaluates and ranks two to six candidate outputs against one task and optional r
 5. Exports both UTF-8 CSV and complete JSON reports and states that AI scoring must be supplemented by human judgement
 
 ### 25 — Prompt Bank
-Not on the original 24-item list — added as a bonus project. A library of reusable prompts, most of which are designed to be used with the other tools on this site.
+A library of reusable prompts, most of which are designed to be used with the other tools on this site.
 1. Works with **no API key at all** for its core purpose — browsing, searching, filtering by category, and copying prompts. Only one optional feature needs a key.
 2. Each prompt has: the prompt text (with a copy button), usage notes on when/how to use it, and a written "Example output" showing the shape of a typical answer — clearly labeled as illustrative, not a live generation
 3. An optional **"Generate a live example"** button per prompt uses the same shared Groq key as the rest of the Lab to actually run that prompt and show a real result. If the prompt has `[BRACKET]` placeholders, the model is told to invent a plausible example value and note the substitution before answering
