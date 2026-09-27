@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Bank — Generative AI Lab</title>
+<style>
+  :root{
+    --ink:#1b1a17;
+    --paper:#f7f5f0;
+    --line:#d8d3c7;
+    --accent:#3d5a4a;
+    --accent-soft:#e7ede9;
+    --amber:#b8752c;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Georgia', 'Iowan Old Style', serif;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  header{
+    width:100%;
+    max-width:900px;
+    padding:28px 20px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  header a.back{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.78rem;
+    color:var(--amber);
+    text-decoration:none;
+  }
+  header h1{
+    margin:10px 0 0;
+    font-size:1.6rem;
+    font-weight:normal;
+  }
+  header p{
+    margin:6px 0 0;
+    font-size:0.9rem;
+    color:#6b675e;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+  }
+
+  main{
+    width:100%;
+    max-width:900px;
+    flex:1;
+    padding:20px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+  }
+
+  .controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  #searchInput{
+    flex:1;
+    min-width:160px;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    font-size:0.88rem;
+    background:#fff;
+  }
+  .chip{
+    font-size:0.78rem;
+    padding:5px 12px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#fff;
+    color:#6b675e;
+    cursor:pointer;
+  }
+  .chip.active{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+  .chip-row{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin:10px 0 20px;
+  }
+
+  #apiKeyBar{
+    font-size:0.82rem;
+    color:#6b675e;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:10px 14px;
+    margin-bottom:20px;
+  }
+  #apiKeyBar label{display:block; margin-bottom:6px;}
+  #apiKeyBar input{
+    width:100%;
+    padding:7px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    font-size:0.85rem;
+  }
+  #apiKeyBar .hint{color:#8a8778; font-size:0.78rem; margin-top:6px;}
+
+  details.card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:4px;
+    margin-bottom:12px;
+    padding:14px 16px;
+  }
+  details.card[open]{ border-color:#c8bfa0; }
+  summary{
+    cursor:pointer;
+    list-style:none;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    font-family:'Georgia', serif;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary .title{font-size:1.05rem; color:var(--ink);}
+  summary .cat{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.72rem;
+    color:var(--amber);
+    white-space:nowrap;
+  }
+
+  .section-label{
+    font-size:0.75rem;
+    font-weight:bold;
+    color:#8a8778;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    margin:16px 0 6px;
+  }
+  .section-label:first-of-type{margin-top:16px;}
+
+  .prompt-text{
+    background:var(--accent-soft);
+    border-radius:3px;
+    padding:12px 14px;
+    font-family:'Courier New', monospace;
+    font-size:0.86rem;
+    white-space:pre-wrap;
+    line-height:1.5;
+  }
+  .notes-text{
+    font-size:0.88rem;
+    color:#4b4a44;
+    line-height:1.55;
+  }
+  .example-text{
+    background:#faf9f5;
+    border:1px dashed var(--line);
+    border-radius:3px;
+    padding:12px 14px;
+    font-size:0.86rem;
+    color:#4b4a44;
+    line-height:1.55;
+    white-space:pre-wrap;
+  }
+  .example-tag{
+    display:inline-block;
+    font-size:0.7rem;
+    color:#8a8778;
+    margin-bottom:6px;
+  }
+  .live-example{
+    background:var(--accent-soft);
+    border-radius:3px;
+    padding:12px 14px;
+    font-size:0.86rem;
+    line-height:1.55;
+    white-space:pre-wrap;
+    margin-top:8px;
+  }
+
+  .card-actions{
+    display:flex;
+    gap:8px;
+    margin-top:6px;
+    flex-wrap:wrap;
+  }
+  .small-btn{
+    font-size:0.75rem;
+    color:var(--accent);
+    background:none;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:4px 10px;
+    cursor:pointer;
+  }
+  .small-btn:disabled{opacity:0.5; cursor:default;}
+  .small-btn.copied{color:#3f6b4f; border-color:#3f6b4f;}
+  .card-status{
+    font-size:0.78rem;
+    color:#8a8778;
+    margin-top:4px;
+  }
+
+  #addForm{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:16px;
+    margin-top:24px;
+  }
+  #addForm h3{
+    font-family:'Georgia', serif;
+    font-weight:normal;
+    font-size:1.05rem;
+    margin:0 0 12px;
+  }
+  #addForm label{display:block; font-size:0.82rem; color:#6b675e; margin-top:10px;}
+  #addForm input[type="text"], #addForm select, #addForm textarea{
+    width:100%;
+    padding:7px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    font-size:0.88rem;
+    margin-top:4px;
+  }
+  #addForm textarea{min-height:70px; resize:vertical;}
+  #addForm button{
+    margin-top:12px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:8px 18px;
+    border-radius:3px;
+    font-size:0.85rem;
+    cursor:pointer;
+  }
+  .custom-badge{
+    font-size:0.68rem;
+    color:#fff;
+    background:var(--accent);
+    border-radius:10px;
+    padding:1px 8px;
+    margin-left:6px;
+  }
+
+  #emptyState{
+    font-size:0.88rem;
+    color:#8a8778;
+    padding:20px 0;
+    text-align:center;
+  }
+
+  @media (min-width:700px){
+    body{ font-size:1.03rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../">&larr; Generative AI Lab</a>
+  <h1>Prompt Bank</h1>
+  <p>A library of reusable prompts with notes on how to use them and an example of what they produce. Browsing needs no setup — the optional "Generate a live example" button uses your free Groq key.</p>
+</header>
+
+<main>
+  <div id="apiKeyBar">
+    <label for="apiKey">Groq API key (optional — only needed for "Generate a live example")</label>
+    <input id="apiKey" type="password" placeholder="Paste your key here — get one at console.groq.com/keys">
+    <div class="hint">Everything else on this page works with no key at all.</div>
+  </div>
+
+  <div class="controls">
+    <input id="searchInput" type="text" placeholder="Search prompts…">
+  </div>
+  <div class="chip-row" id="categoryChips"></div>
+
+  <div id="cardList"></div>
+  <div id="emptyState" style="display:none;">No prompts match that search or category.</div>
+
+  <div id="addForm">
+    <h3>Add your own prompt</h3>
+    <label for="newTitle">Title</label>
+    <input id="newTitle" type="text" placeholder="e.g. Turn meeting notes into action items">
+    <label for="newCategory">Category</label>
+    <select id="newCategory"></select>
+    <label for="newPrompt">Prompt text</label>
+    <textarea id="newPrompt" placeholder="Write the prompt — use [BRACKETS] for anything the user should fill in"></textarea>
+    <label for="newNotes">Usage notes (optional)</label>
+    <textarea id="newNotes" placeholder="When and how to use this prompt"></textarea>
+    <button id="addPromptBtn" type="button">Save prompt</button>
+  </div>
+</main>
+
+<script>
+const BUILT_IN_PROMPTS = [
+  {
+    id: 'b1', category: 'Writing',
+    title: 'Tighten this paragraph',
+    prompt: 'Rewrite the following paragraph to be about 30% shorter without losing any distinct point. Keep the tone the same.\n\n[PASTE PARAGRAPH HERE]',
+    notes: 'Good for cutting filler from a draft before sending it. Works well in the Grammar & Writing Improver tool on this site, or pasted directly into the chatbot.',
+    example: 'Original: "In today\'s fast-paced world, it is becoming increasingly important for businesses to..."\n\nShortened: "Businesses today need to move fast. That means..."\n\n(Illustrative — actual output depends on your paragraph.)'
+  },
+  {
+    id: 'b2', category: 'Writing',
+    title: 'Explain like I\'m five',
+    prompt: 'Explain [TOPIC] as if you were teaching it to a curious 10-year-old. Use a simple analogy and avoid jargon. Keep it under 150 words.',
+    notes: 'Great first pass when you\'re learning something new and the textbook definition isn\'t clicking yet. Try it before diving into a dense research paper.',
+    example: 'Topic: "How does WiFi work?"\n\n"Imagine your router is a radio station, and your phone is a radio. Instead of playing music, it sends tiny bits of information back and forth through the air, really fast — thousands of times per second..."'
+  },
+  {
+    id: 'b3', category: 'Coding',
+    title: 'Explain this code line-by-line',
+    prompt: 'Explain what this code does, line by line, as if reviewing it with a junior developer who knows the language basics but not this codebase:\n\n[PASTE CODE HERE]',
+    notes: 'Use this before modifying unfamiliar code, or when reviewing a pull request you didn\'t write. Works well in the chatbot on this site.',
+    example: '"Line 1 imports the requests library, used for making HTTP calls.\nLine 3 defines a function `fetch_user` that takes a `user_id` parameter.\nLine 4 sends a GET request to the API endpoint, inserting the user_id into the URL..."'
+  },
+  {
+    id: 'b4', category: 'Coding',
+    title: 'Find the bug',
+    prompt: 'This code is supposed to [WHAT IT SHOULD DO], but instead [WHAT ACTUALLY HAPPENS]. Walk through the logic and identify where it likely goes wrong, without rewriting the whole thing yet.\n\n[PASTE CODE HERE]',
+    notes: 'Describing the expected vs. actual behavior first gets much better results than just pasting code and saying "fix this." Ask for the diagnosis before the fix — you\'ll learn more and catch bad fixes.',
+    example: '"The loop on line 12 starts at index 1 instead of 0, so it skips the first item in the list. That matches the symptom you described — the first entry never gets processed."'
+  },
+  {
+    id: 'b5', category: 'Business & Career',
+    title: 'Turn achievements into resume bullets',
+    prompt: 'Turn this rough description of something I did at work into 2-3 punchy resume bullet points, each starting with a strong verb and including a number or measurable outcome if one is mentioned. Don\'t invent numbers that aren\'t there.\n\n[DESCRIBE WHAT YOU DID]',
+    notes: 'Feed it your honest, messy description — don\'t try to write it "properly" first. Pairs well with the Resume Analyser on this site for a second pass.',
+    example: 'Input: "I redid our payment system, it used to take forever to reconcile, now it\'s way faster"\n\nOutput:\n"- Rebuilt the payment reconciliation system, cutting processing time significantly\n- Reduced manual reconciliation workload by streamlining the underlying data pipeline"\n\n(Add real numbers if you have them — the model won\'t make them up.)'
+  },
+  {
+    id: 'b6', category: 'Business & Career',
+    title: 'Draft a polite follow-up email',
+    prompt: 'Write a short, polite follow-up email. Context: [WHAT YOU\'RE FOLLOWING UP ON]. It has been [TIME PERIOD] since [LAST CONTACT]. Tone: friendly but not pushy. Keep it under 100 words.',
+    notes: 'Useful for job applications, client check-ins, or anything you\'ve been putting off sending. Try the message_compose pattern: ask for two tones (gentle nudge vs. more direct) if the first draft feels off.',
+    example: '"Hi [Name], just wanted to follow up on my application for the Backend Engineer role — I submitted it about two weeks ago. I\'m still very interested and happy to share anything else that would help. Thanks for your time!"'
+  },
+  {
+    id: 'b7', category: 'Learning & Research',
+    title: 'Summarize and quiz me',
+    prompt: 'Summarize the following text in 5 bullet points, then write 3 short quiz questions (with answers below, separated) to test whether I actually understood it:\n\n[PASTE TEXT HERE]',
+    notes: 'A good way to check whether you actually absorbed something instead of just skimming it. Works well with the Document Summariser or Research summary tools on this site as a follow-up step.',
+    example: '"Summary:\n- The article argues X causes Y...\n\nQuiz:\n1. What is the main cause identified in the article?\n(Answer below the questions, not immediately after each one, so you\'re not tempted to peek.)"'
+  },
+  {
+    id: 'b8', category: 'Learning & Research',
+    title: 'Compare two concepts',
+    prompt: 'Compare [CONCEPT A] and [CONCEPT B]. Cover: what problem each solves, one key tradeoff between them, and a situation where you\'d clearly pick one over the other. Use a short table if it helps.',
+    notes: 'Better than asking "what\'s the difference between X and Y" alone — naming a concrete decision scenario forces a more useful, less wishy-washy answer.',
+    example: '"REST vs GraphQL:\n\n| | REST | GraphQL |\n|---|---|---|\n| Data fetching | Fixed endpoints | Client specifies exactly what it needs |\n| Best for | Simple, cacheable APIs | Complex UIs with varied data needs |\n\nPick REST for a small public API; GraphQL when your frontend needs differ a lot page to page."'
+  },
+  {
+    id: 'b9', category: 'Brainstorming',
+    title: '10 angles on one idea',
+    prompt: 'Give me 10 different angles or directions for [IDEA/TOPIC]. Make them genuinely different from each other, not 10 minor variations of the same angle. One line each.',
+    notes: 'Useful when you\'re stuck starting a blog post, project, or gift idea and need a wider net before narrowing down. Pair with the Blog & Social Content Generator once you\'ve picked an angle.',
+    example: '"Idea: a blog post about home coffee brewing\n\n1. The science of extraction, explained simply\n2. A beginner\'s $50 setup vs. a $500 setup, is it worth it\n3. One method, five ways — how grind size changes everything\n4. Interviews with baristas about home mistakes they see most\n..."'
+  },
+  {
+    id: 'b10', category: 'Brainstorming',
+    title: 'Devil\'s advocate',
+    prompt: 'I\'m planning to [YOUR PLAN OR DECISION]. Play devil\'s advocate — give me the strongest honest case against this, including risks I might be underestimating. Don\'t soften it to be nice.',
+    notes: 'Best used on a decision you\'ve already mostly made, as a gut-check before committing. Explicitly asking it not to soften the answer matters — models default to agreeable.',
+    example: '"Plan: quitting my job to freelance full-time\n\nStrongest case against: you\'re basing this on 3 months of steady client work, which isn\'t enough to know if it\'s repeatable. Freelance income is lumpier than salaried income even for people who eventually succeed at it — have you budgeted for a 4-6 month dry spell?..."'
+  },
+  {
+    id: 'b11', category: 'Image Generation',
+    title: 'Detailed scene prompt template',
+    prompt: '[SUBJECT], [SETTING/BACKGROUND], [LIGHTING], [STYLE — e.g. watercolor, photorealistic, digital art], [MOOD/ATMOSPHERE], [CAMERA ANGLE — optional]',
+    notes: 'A reliable structure for the Text-to-Image Generator on this site. Filling in each bracket separately (rather than one long sentence) tends to give the model clearer signal.',
+    example: '"A red fox, standing in a snowy pine forest at dawn, soft golden backlighting, watercolor illustration style, quiet and peaceful mood, low camera angle"'
+  },
+  {
+    id: 'b12', category: 'Image Generation',
+    title: 'Product photo prompt template',
+    prompt: 'Studio product photo of [PRODUCT], on a [BACKGROUND COLOR/SURFACE], soft even lighting, no harsh shadows, [ANGLE — e.g. 3/4 view, top-down], clean minimal composition, high detail',
+    notes: 'Useful starting point for mockup-style images for a store listing or portfolio piece. Try a few background colors — it changes the mood more than you\'d expect.',
+    example: '"Studio product photo of a ceramic coffee mug, on a soft sage green surface, soft even lighting, no harsh shadows, 3/4 view, clean minimal composition, high detail"'
+  }
+];
+
+const CATEGORIES = [...new Set(BUILT_IN_PROMPTS.map(p => p.category))];
+
+const apiKeyInput = document.getElementById('apiKey');
+const searchInput = document.getElementById('searchInput');
+const categoryChips = document.getElementById('categoryChips');
+const cardList = document.getElementById('cardList');
+const emptyState = document.getElementById('emptyState');
+const newCategorySelect = document.getElementById('newCategory');
+
+apiKeyInput.value = localStorage.getItem('genai_lab_groq_key') || '';
+apiKeyInput.addEventListener('input', () => {
+  localStorage.setItem('genai_lab_groq_key', apiKeyInput.value.trim());
+});
+
+function loadCustomPrompts() {
+  try {
+    return JSON.parse(localStorage.getItem('genai_lab_prompt_bank_custom') || '[]');
+  } catch (err) {
+    return [];
+  }
+}
+function saveCustomPrompts(list) {
+  localStorage.setItem('genai_lab_prompt_bank_custom', JSON.stringify(list));
+}
+
+let activeCategory = 'All';
+let searchTerm = '';
+
+function allPrompts() {
+  return [...BUILT_IN_PROMPTS, ...loadCustomPrompts()];
+}
+
+function renderChips() {
+  const cats = ['All', ...CATEGORIES, ...loadCustomPrompts().map(p => p.category).filter(c => !CATEGORIES.includes(c))];
+  const unique = [...new Set(cats)];
+  categoryChips.innerHTML = '';
+  unique.forEach(cat => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (cat === activeCategory ? ' active' : '');
+    chip.textContent = cat;
+    chip.addEventListener('click', () => {
+      activeCategory = cat;
+      renderChips();
+      renderCards();
+    });
+    categoryChips.appendChild(chip);
+  });
+
+  newCategorySelect.innerHTML = '';
+  [...CATEGORIES, 'Other'].forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    newCategorySelect.appendChild(opt);
+  });
+}
+
+function renderCards() {
+  const term = searchTerm.toLowerCase();
+  const prompts = allPrompts().filter(p => {
+    const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
+    const matchesSearch = !term || (p.title + ' ' + p.prompt + ' ' + (p.notes || '')).toLowerCase().includes(term);
+    return matchesCategory && matchesSearch;
+  });
+
+  cardList.innerHTML = '';
+  emptyState.style.display = prompts.length === 0 ? 'block' : 'none';
+
+  prompts.forEach(p => cardList.appendChild(buildCard(p)));
+}
+
+function buildCard(p) {
+  const details = document.createElement('details');
+  details.className = 'card';
+
+  const summary = document.createElement('summary');
+  summary.innerHTML = '<span class="title">' + escapeHtml(p.title) + (p.custom ? '<span class="custom-badge">Yours</span>' : '') + '</span><span class="cat">' + escapeHtml(p.category) + '</span>';
+  details.appendChild(summary);
+
+  const promptLabel = document.createElement('div');
+  promptLabel.className = 'section-label';
+  promptLabel.textContent = 'Prompt';
+  details.appendChild(promptLabel);
+
+  const promptBox = document.createElement('div');
+  promptBox.className = 'prompt-text';
+  promptBox.textContent = p.prompt;
+  details.appendChild(promptBox);
+
+  const promptActions = document.createElement('div');
+  promptActions.className = 'card-actions';
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'small-btn';
+  copyBtn.type = 'button';
+  copyBtn.textContent = 'Copy prompt';
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(p.prompt);
+      copyBtn.textContent = 'Copied';
+      copyBtn.classList.add('copied');
+      setTimeout(() => { copyBtn.textContent = 'Copy prompt'; copyBtn.classList.remove('copied'); }, 1500);
+    } catch (err) { copyBtn.textContent = 'Could not copy'; }
+  });
+  promptActions.appendChild(copyBtn);
+
+  if (p.custom) {
+    const delBtn = document.createElement('button');
+    delBtn.className = 'small-btn';
+    delBtn.type = 'button';
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', () => {
+      const remaining = loadCustomPrompts().filter(cp => cp.id !== p.id);
+      saveCustomPrompts(remaining);
+      renderChips();
+      renderCards();
+    });
+    promptActions.appendChild(delBtn);
+  }
+  details.appendChild(promptActions);
+
+  if (p.notes) {
+    const notesLabel = document.createElement('div');
+    notesLabel.className = 'section-label';
+    notesLabel.textContent = 'Usage notes';
+    details.appendChild(notesLabel);
+    const notesBox = document.createElement('div');
+    notesBox.className = 'notes-text';
+    notesBox.textContent = p.notes;
+    details.appendChild(notesBox);
+  }
+
+  if (p.example) {
+    const exLabel = document.createElement('div');
+    exLabel.className = 'section-label';
+    exLabel.textContent = 'Example output';
+    details.appendChild(exLabel);
+    const exTag = document.createElement('div');
+    exTag.className = 'example-tag';
+    exTag.textContent = 'Illustrative — written to show the shape of a typical answer, not a live generation.';
+    details.appendChild(exTag);
+    const exBox = document.createElement('div');
+    exBox.className = 'example-text';
+    exBox.textContent = p.example;
+    details.appendChild(exBox);
+  }
+
+  const liveWrap = document.createElement('div');
+  const liveBtn = document.createElement('button');
+  liveBtn.className = 'small-btn';
+  liveBtn.type = 'button';
+  liveBtn.textContent = 'Generate a live example';
+  liveBtn.style.marginTop = '10px';
+  const liveStatus = document.createElement('div');
+  liveStatus.className = 'card-status';
+  const liveOutput = document.createElement('div');
+  liveOutput.className = 'live-example';
+  liveOutput.style.display = 'none';
+
+  liveBtn.addEventListener('click', async () => {
+    const apiKey = apiKeyInput.value.trim();
+    if (!apiKey) {
+      liveStatus.textContent = 'Add your free Groq API key at the top of the page first.';
+      return;
+    }
+    liveBtn.disabled = true;
+    liveStatus.textContent = 'Generating…';
+    liveOutput.style.display = 'none';
+
+    const messages = [
+      {
+        role: 'system',
+        content: 'The user wants to see a live example of what this prompt produces. If the prompt contains bracketed placeholders like [TOPIC], invent a plausible, generic example value for each one and briefly note your substitution in one line before the answer. Then answer the prompt for real.'
+      },
+      { role: 'user', content: p.prompt }
+    ];
+
+    try {
+      const data = await callGroq(apiKey, messages, liveStatus);
+      if (data.error) {
+        liveStatus.textContent = 'Error: ' + data.error.message;
+        return;
+      }
+      const text = data.choices?.[0]?.message?.content?.trim() || '(no response)';
+      liveOutput.textContent = text;
+      liveOutput.style.display = 'block';
+      liveStatus.textContent = '';
+    } catch (err) {
+      liveStatus.textContent = 'Network error: ' + err.message;
+    } finally {
+      liveBtn.disabled = false;
+    }
+  });
+
+  liveWrap.appendChild(liveBtn);
+  liveWrap.appendChild(liveStatus);
+  liveWrap.appendChild(liveOutput);
+  details.appendChild(liveWrap);
+
+  return details;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+searchInput.addEventListener('input', () => {
+  searchTerm = searchInput.value;
+  renderCards();
+});
+
+document.getElementById('addPromptBtn').addEventListener('click', () => {
+  const title = document.getElementById('newTitle').value.trim();
+  const category = newCategorySelect.value;
+  const prompt = document.getElementById('newPrompt').value.trim();
+  const notes = document.getElementById('newNotes').value.trim();
+  if (!title || !prompt) {
+    alert('Add at least a title and the prompt text.');
+    return;
+  }
+  const list = loadCustomPrompts();
+  list.push({ id: 'c' + Date.now(), category, title, prompt, notes, custom: true });
+  saveCustomPrompts(list);
+
+  document.getElementById('newTitle').value = '';
+  document.getElementById('newPrompt').value = '';
+  document.getElementById('newNotes').value = '';
+
+  renderChips();
+  renderCards();
+});
+
+// --- Shared Groq calling logic (model auto-selection + rate-limit handling) ---
+const MODEL_PREFERENCE = [
+  'llama-3.1-8b-instant',
+  'moonshotai/kimi-k2-instruct',
+  'llama-3.3-70b-versatile',
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'qwen/qwen3.6-27b'
+];
+const NON_CHAT_MODEL = /whisper|tts|guard|prompt-guard/i;
+let currentModel = sessionStorage.getItem('genai_lab_groq_model') || null;
+
+async function pickModel(apiKey) {
+  const res = await fetch('https://api.groq.com/openai/v1/models', {
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'Could not fetch the model list.');
+  const available = (data.data || []).map(m => m.id).filter(id => !NON_CHAT_MODEL.test(id));
+  const chosen = MODEL_PREFERENCE.find(m => available.includes(m)) || available[0];
+  if (!chosen) throw new Error('No chat models are available on this Groq account.');
+  currentModel = chosen;
+  sessionStorage.setItem('genai_lab_groq_model', chosen);
+  return chosen;
+}
+
+async function callGroq(apiKey, messages, statusEl, attempt = 1) {
+  if (!currentModel) {
+    const chosen = await pickModel(apiKey);
+    statusEl.textContent = 'Using model: ' + chosen;
+  }
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({ model: currentModel, messages })
+  });
+  const data = await res.json();
+
+  const modelGone = data.error && /does not exist|decommission|not found/i.test(data.error.message || '');
+  if (modelGone && attempt < 3) {
+    currentModel = null;
+    sessionStorage.removeItem('genai_lab_groq_model');
+    const chosen = await pickModel(apiKey);
+    statusEl.textContent = 'Previous model was retired — switched to: ' + chosen;
+    return callGroq(apiKey, messages, statusEl, attempt + 1);
+  }
+
+  const rateLimited = data.error && res.status === 429;
+  if (rateLimited && attempt < 3) {
+    const headerWait = parseFloat(res.headers.get('retry-after'));
+    const messageWait = parseFloat((data.error.message || '').match(/try again in ([\d.]+)s/i)?.[1]);
+    const waitSeconds = Math.min(Math.max(headerWait || messageWait || 5, 1) + 1, 60);
+    statusEl.textContent = 'Rate limit reached — waiting ' + Math.ceil(waitSeconds) + 's before retrying…';
+    await new Promise(r => setTimeout(r, waitSeconds * 1000));
+    return callGroq(apiKey, messages, statusEl, attempt + 1);
+  }
+
+  const retryable = data.error && res.status >= 500;
+  if (retryable && attempt < 3) {
+    await new Promise(r => setTimeout(r, attempt * 1000));
+    return callGroq(apiKey, messages, statusEl, attempt + 1);
+  }
+  return data;
+}
+
+renderChips();
+renderCards();
+</script>
+
+</body>
+</html>

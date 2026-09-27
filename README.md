@@ -42,7 +42,8 @@ genai-lab/
     ├── code-explainer-debugger/index.html
     ├── prompt-comparison-tool/index.html
     ├── small-model-fine-tuning/index.html
-    └── ai-output-evaluation-dashboard/index.html
+    ├── ai-output-evaluation-dashboard/index.html
+    └── prompt-bank/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -345,3 +346,11 @@ Evaluates and ranks two to six candidate outputs against one task and optional r
 3. Randomises candidates behind anonymous IDs before evaluation and restores their original labels afterward
 4. Shows an overall ranking, per-criterion score table, and strengths/weaknesses cards
 5. Exports both UTF-8 CSV and complete JSON reports and states that AI scoring must be supplemented by human judgement
+
+### 25 — Prompt Bank
+Not on the original 24-item list — added as a bonus project. A library of reusable prompts, most of which are designed to be used with the other tools on this site.
+1. Works with **no API key at all** for its core purpose — browsing, searching, filtering by category, and copying prompts. Only one optional feature needs a key.
+2. Each prompt has: the prompt text (with a copy button), usage notes on when/how to use it, and a written "Example output" showing the shape of a typical answer — clearly labeled as illustrative, not a live generation
+3. An optional **"Generate a live example"** button per prompt uses the same shared Groq key as the rest of the Lab to actually run that prompt and show a real result. If the prompt has `[BRACKET]` placeholders, the model is told to invent a plausible example value and note the substitution before answering
+4. You can add your own prompts (title, category, prompt text, optional usage notes) — these save to `localStorage` in your own browser only, appear alongside the built-in ones with a "Yours" badge, and can be deleted. They aren't shared anywhere or uploaded.
+5. 12 starter prompts ship across 6 categories: Writing, Coding, Business & Career, Learning & Research, Brainstorming, and Image Generation (the last two are written specifically to plug into the Text-to-Image Generator on this site)
