@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text-to-Speech Reader — Generative AI Lab</title>
+<style>
+  :root{
+    --ink:#1b1a17;
+    --paper:#f7f5f0;
+    --line:#d8d3c7;
+    --accent:#3d5a4a;
+    --accent-soft:#e7ede9;
+    --amber:#b8752c;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Georgia', 'Iowan Old Style', serif;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  header{
+    width:100%;
+    max-width:900px;
+    padding:28px 20px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  header a.back{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    font-size:0.78rem;
+    color:var(--amber);
+    text-decoration:none;
+  }
+  header h1{
+    margin:10px 0 0;
+    font-size:1.6rem;
+    font-weight:normal;
+  }
+  header p{
+    margin:6px 0 0;
+    font-size:0.9rem;
+    color:#6b675e;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+  }
+
+  main{
+    width:100%;
+    max-width:900px;
+    flex:1;
+    padding:20px;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+  }
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:8px;
+  }
+  .tab{
+    font-size:0.82rem;
+    padding:6px 14px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:#fff;
+    color:#6b675e;
+    cursor:pointer;
+  }
+  .tab.active{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .drop{
+    border:1px dashed var(--line);
+    border-radius:4px;
+    padding:16px;
+    text-align:center;
+    font-size:0.85rem;
+    color:#8a8778;
+    cursor:pointer;
+    background:#fff;
+  }
+  .drop.ready{ border-color:var(--accent); color:var(--accent); }
+  #fileInput{display:none;}
+
+  textarea{
+    width:100%;
+    min-height:220px;
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    font-family:'Georgia', serif;
+    font-size:1rem;
+    line-height:1.6;
+    resize:vertical;
+    background:#fff;
+    color:var(--ink);
+  }
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:16px;
+  }
+  select{
+    padding:7px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    font-size:0.85rem;
+    background:#fff;
+  }
+  .slider-group{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.82rem;
+    color:#6b675e;
+  }
+  input[type="range"]{ width:100px; }
+
+  .btn-row{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  button.primary{
+    font-size:0.9rem;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:9px 22px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  button.secondary{
+    font-size:0.85rem;
+    background:none;
+    color:var(--accent);
+    border:1px solid var(--line);
+    padding:8px 18px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  button:disabled{opacity:0.5; cursor:default;}
+
+  #status{
+    margin-top:12px;
+    font-size:0.82rem;
+    color:#8a8578;
+  }
+
+  mark{
+    background:var(--accent-soft);
+    color:inherit;
+    border-radius:2px;
+  }
+
+  @media (min-width:700px){
+    body{ font-size:1.03rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../">&larr; Generative AI Lab</a>
+  <h1>Text-to-Speech Reader</h1>
+  <p>Paste or upload text and have it read aloud. Runs entirely in your browser's built-in speech engine — no API key, no upload, no cost.</p>
+</header>
+
+<main>
+  <div class="tabs">
+    <button type="button" class="tab active" data-panel="pastePanel">Paste text</button>
+    <button type="button" class="tab" data-panel="uploadPanel">Upload file</button>
+  </div>
+
+  <div class="panel active" id="pastePanel">
+    <textarea id="textArea" placeholder="Paste or type the text you want read aloud…"></textarea>
+  </div>
+  <div class="panel" id="uploadPanel">
+    <div class="drop" id="drop">Click to choose a PDF or .txt file, or drag one here</div>
+    <input id="fileInput" type="file" accept="application/pdf,text/plain">
+  </div>
+
+  <div class="controls">
+    <label for="voiceSelect">Voice</label>
+    <select id="voiceSelect"></select>
+
+    <div class="slider-group">
+      <label for="rateSlider">Speed</label>
+      <input id="rateSlider" type="range" min="0.5" max="2" step="0.1" value="1">
+      <span id="rateValue">1.0x</span>
+    </div>
+
+    <div class="slider-group">
+      <label for="pitchSlider">Pitch</label>
+      <input id="pitchSlider" type="range" min="0" max="2" step="0.1" value="1">
+      <span id="pitchValue">1.0</span>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="primary" id="playBtn">Play</button>
+    <button class="secondary" id="pauseBtn" disabled>Pause</button>
+    <button class="secondary" id="stopBtn" disabled>Stop</button>
+  </div>
+
+  <div id="status"></div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const tabs = document.querySelectorAll('.tab');
+const textArea = document.getElementById('textArea');
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('fileInput');
+const voiceSelect = document.getElementById('voiceSelect');
+const rateSlider = document.getElementById('rateSlider');
+const rateValue = document.getElementById('rateValue');
+const pitchSlider = document.getElementById('pitchSlider');
+const pitchValue = document.getElementById('pitchValue');
+const playBtn = document.getElementById('playBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const stopBtn = document.getElementById('stopBtn');
+const status = document.getElementById('status');
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(tab.dataset.panel).classList.add('active');
+  });
+});
+
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('dragover', (e) => e.preventDefault());
+drop.addEventListener('drop', (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+async function handleFile(file) {
+  drop.textContent = 'Reading ' + file.name + '…';
+  try {
+    let text = '';
+    if (file.type === 'application/pdf') {
+      const buffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(it => it.str).join(' ') + '\n\n';
+      }
+    } else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+      text = await file.text();
+    } else {
+      drop.textContent = 'Only PDF or .txt files are supported — try another file.';
+      return;
+    }
+    textArea.value = text.trim();
+    drop.textContent = 'Loaded: ' + file.name;
+    drop.classList.add('ready');
+    tabs[0].click();
+  } catch (err) {
+    drop.textContent = 'Could not read that file — try another one.';
+  }
+}
+
+// --- Voice list ---
+function populateVoices() {
+  const voices = speechSynthesis.getVoices();
+  if (voices.length === 0) return;
+  voiceSelect.innerHTML = '';
+  voices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = v.name + ' (' + v.lang + ')' + (v.default ? ' — default' : '');
+    voiceSelect.appendChild(opt);
+  });
+  // Prefer an English voice by default if one exists
+  const enIndex = voices.findIndex(v => v.lang.startsWith('en'));
+  if (enIndex !== -1) voiceSelect.value = enIndex;
+}
+populateVoices();
+if (typeof speechSynthesis !== 'undefined') {
+  speechSynthesis.onvoiceschanged = populateVoices;
+}
+
+rateSlider.addEventListener('input', () => rateValue.textContent = parseFloat(rateSlider.value).toFixed(1) + 'x');
+pitchSlider.addEventListener('input', () => pitchValue.textContent = parseFloat(pitchSlider.value).toFixed(1));
+
+// --- Speaking controls ---
+let utterance = null;
+
+function setButtons(state) {
+  // state: 'idle' | 'speaking' | 'paused'
+  playBtn.disabled = state === 'speaking';
+  pauseBtn.disabled = state === 'idle';
+  pauseBtn.textContent = state === 'paused' ? 'Resume' : 'Pause';
+  stopBtn.disabled = state === 'idle';
+}
+
+playBtn.addEventListener('click', () => {
+  if (!('speechSynthesis' in window)) {
+    status.textContent = 'Your browser does not support speech synthesis. Try Chrome, Edge, or Safari.';
+    return;
+  }
+  const text = textArea.value.trim();
+  if (!text) {
+    status.textContent = 'Add some text first.';
+    return;
+  }
+
+  speechSynthesis.cancel();
+  utterance = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const chosen = voices[voiceSelect.value];
+  if (chosen) utterance.voice = chosen;
+  utterance.rate = parseFloat(rateSlider.value);
+  utterance.pitch = parseFloat(pitchSlider.value);
+
+  utterance.onstart = () => { setButtons('speaking'); status.textContent = 'Speaking…'; };
+  utterance.onend = () => { setButtons('idle'); status.textContent = ''; };
+  utterance.onerror = (e) => {
+    setButtons('idle');
+    status.textContent = 'Something interrupted playback (' + e.error + ').';
+  };
+
+  speechSynthesis.speak(utterance);
+});
+
+pauseBtn.addEventListener('click', () => {
+  if (speechSynthesis.paused) {
+    speechSynthesis.resume();
+    setButtons('speaking');
+    status.textContent = 'Speaking…';
+  } else {
+    speechSynthesis.pause();
+    setButtons('paused');
+    status.textContent = 'Paused.';
+  }
+});
+
+stopBtn.addEventListener('click', () => {
+  speechSynthesis.cancel();
+  setButtons('idle');
+  status.textContent = '';
+});
+
+window.addEventListener('beforeunload', () => speechSynthesis.cancel());
+</script>
+
+</body>
+</html>

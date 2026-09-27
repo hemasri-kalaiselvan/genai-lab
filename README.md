@@ -43,7 +43,8 @@ genai-lab/
     ├── prompt-comparison-tool/index.html
     ├── small-model-fine-tuning/index.html
     ├── ai-output-evaluation-dashboard/index.html
-    └── prompt-bank/index.html
+    ├── prompt-bank/index.html
+    └── text-to-speech-reader/index.html
 ```
 
 Every future project gets its own folder under `projects/`, each with its own `index.html` — but no extra README files. This keeps every project self-contained and gives each one a clean URL, e.g.:
@@ -138,6 +139,7 @@ This automatic selection helps the projects continue working when a model is ren
 | 23 | Small-Model Fine-Tuning | SmolLM2, Google Colab, Transformers, Datasets, TRL, PEFT, and LoRA |
 | 24 | AI Output Evaluation Dashboard | Groq API, anonymized AI judging |
 | 25 | Prompt Bank | Groq API (optional, per-prompt) |
+| 26 | Text-to-Speech Reader | Web Speech API (browser-native, no key) |
 
 ### Supporting web technologies
 
@@ -355,3 +357,10 @@ A library of reusable prompts, most of which are designed to be used with the ot
 3. An optional **"Generate a live example"** button per prompt uses the same shared Groq key as the rest of the Lab to actually run that prompt and show a real result. If the prompt has `[BRACKET]` placeholders, the model is told to invent a plausible example value and note the substitution before answering
 4. You can add your own prompts (title, category, prompt text, optional usage notes) — these save to `localStorage` in your own browser only, appear alongside the built-in ones with a "Yours" badge, and can be deleted. They aren't shared anywhere or uploaded.
 5. 12 starter prompts ship across 6 categories: Writing, Coding, Business & Career, Learning & Research, Brainstorming, and Image Generation (the last two are written specifically to plug into the Text-to-Image Generator on this site)
+
+### 26 — Text-to-Speech Reader
+Uses the browser's built-in Web Speech API (`speechSynthesis`) — needs no API key, no upload, and no cost at all.
+1. Paste text directly, or upload a PDF or .txt file to have it read aloud
+2. Choose from whatever voices your browser/OS provides, adjust speed and pitch, and use Play/Pause/Stop controls
+3. Voice availability varies by browser and device — Chrome and Edge typically offer the most options; the app defaults to an English voice when one is available
+4. Nothing is sent anywhere — the entire thing runs locally in your browser
