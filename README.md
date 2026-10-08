@@ -4,7 +4,7 @@
 
 **Tech:** HTML, CSS, JavaScript
 **Tools:** GitHub, pdf.js
-**AI Tools:** Claude, Groq API, Qwen Vision, Whisper, Pollinations.ai, SmolLM2, Hugging Face Transformers, Datasets, TRL, PEFT/LoRA, Google Colab
+**AI Tools:** ChatGPT, Claude, Groq API, Qwen Vision, Whisper, Pollinations.ai, SmolLM2, Hugging Face Transformers, Datasets, TRL, PEFT/LoRA, Google Colab
 
 ## About
 A personal portal of small, working generative-AI tools — each one a standalone project, linked from a single landing page. Deployed as a static site with GitHub Pages. No install, no build step, no cost.
@@ -76,7 +76,8 @@ That's the link for your portfolio. It works on mobile and desktop — the layou
 
 ## How AI Helped
 
-- **Claude** — design direction, code, debugging, and deployment across all nine tools
+- **ChatGPT** — early brainstorming, project ideas, and quick reference while building
+- **Claude** — design direction, code, debugging, and deployment across all tools
 - Worked through real, provider-specific problems: automatic model selection so tools keep working when Groq retires or renames a model; client-side rate-limit handling that reads Groq's own retry hints; and reading Pollinations'  live model list instead of hardcoding names
 
 ## AI Tools and Technologies Used
